@@ -1,4 +1,4 @@
-package com.nexenio.rxandroidbleserver;
+package com.nexenio.rxandroidbleserverapp;
 
 import org.junit.Test;
 

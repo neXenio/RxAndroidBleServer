@@ -1,7 +1,9 @@
-package com.nexenio.rxandroidbleserver;
+package com.nexenio.rxandroidbleserverapp;
 
 import android.content.Context;
 
+import com.nexenio.rxandroidbleserver.RxBleServer;
+import com.nexenio.rxandroidbleserver.RxBleServerProvider;
 import com.nexenio.rxandroidbleserver.service.RxBleService;
 import com.nexenio.rxandroidbleserver.service.ServiceBuilder;
 import com.nexenio.rxandroidbleserver.service.characteristic.CharacteristicBuilder;
@@ -22,6 +24,7 @@ public final class ExampleProfile {
     public static final UUID EXAMPLE_DESCRIPTOR_UUID = UUID.fromString("c8976395-2170-46c1-be55-b46d31dcb61c");
 
     private ExampleProfile() {
+
     }
 
     public static RxBleServer createExampleServer(@NonNull Context context) {

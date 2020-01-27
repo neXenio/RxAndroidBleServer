@@ -1,9 +1,11 @@
-package com.nexenio.rxandroidbleserver;
+package com.nexenio.rxandroidbleserverapp;
 
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 import android.widget.ToggleButton;
+
+import com.nexenio.rxandroidbleserver.RxBleServer;
 
 import java.util.UUID;
 
