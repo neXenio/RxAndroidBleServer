@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">BLE Server</string>
+
+    <string name="action_provide_services">Provide Services</string>
+    <string name="action_advertise_services">Advertise Services</string>
+
+    <string name="status_service_providing_started">Providing started</string>
+    <string name="status_service_providing_stopped">Providing stopped</string>
+    <string name="status_service_advertising_started">Advertising started</string>
+    <string name="status_service_advertising_stopped">Advertising stopped</string>
+
+</resources>
