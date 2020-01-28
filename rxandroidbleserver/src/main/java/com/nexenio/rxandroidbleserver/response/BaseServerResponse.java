@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGatt;
 
 import com.nexenio.rxandroidbleserver.client.RxBleClient;
 import com.nexenio.rxandroidbleserver.request.RxBleServerRequest;
+import com.nexenio.rxandroidbleserver.service.value.RxBleValue;
 
 import java.util.Arrays;
 
@@ -17,9 +18,9 @@ public class BaseServerResponse implements RxBleServerResponse {
 
     private final int offset;
 
-    private final byte[] data;
+    private final RxBleValue data;
 
-    public BaseServerResponse(RxBleClient client, int requestId, int status, int offset, byte[] data) {
+    public BaseServerResponse(RxBleClient client, int requestId, int status, int offset, RxBleValue data) {
         this.client = client;
         this.requestId = requestId;
         this.status = status;
@@ -27,13 +28,13 @@ public class BaseServerResponse implements RxBleServerResponse {
         this.data = data;
     }
 
-    public BaseServerResponse(RxBleServerRequest request, byte[] responseData) {
+    public BaseServerResponse(RxBleServerRequest request, RxBleValue data) {
         this(
                 request.getClient(),
                 request.getId(),
                 BluetoothGatt.GATT_SUCCESS,
                 request.getOffset(),
-                trimData(responseData, request.getOffset())
+                data
         );
     }
 
@@ -58,7 +59,7 @@ public class BaseServerResponse implements RxBleServerResponse {
     }
 
     @Override
-    public byte[] getData() {
+    public RxBleValue getData() {
         return data;
     }
 
@@ -69,7 +70,7 @@ public class BaseServerResponse implements RxBleServerResponse {
                 ", requestId=" + requestId +
                 ", status=" + status +
                 ", offset=" + offset +
-                ", data=" + Arrays.toString(data) +
+                ", data=" + data +
                 '}';
     }
 

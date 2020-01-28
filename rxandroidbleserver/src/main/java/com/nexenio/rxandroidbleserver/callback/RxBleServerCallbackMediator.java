@@ -15,6 +15,7 @@ import com.nexenio.rxandroidbleserver.request.characteristic.RxBleCharacteristic
 import com.nexenio.rxandroidbleserver.service.RxBleService;
 import com.nexenio.rxandroidbleserver.service.characteristic.RxBleCharacteristic;
 import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.RxBleDescriptor;
+import com.nexenio.rxandroidbleserver.service.value.BaseValue;
 
 import androidx.annotation.NonNull;
 import io.reactivex.Single;
@@ -62,7 +63,7 @@ public class RxBleServerCallbackMediator {
 
     private Single<RxBleCharacteristicWriteRequest> createCharacteristicWriteRequest(BluetoothDevice device, BluetoothGattCharacteristic gattCharacteristic, int id, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
         return Single.zip(getClient(device), getCharacteristic(gattCharacteristic),
-                (client, characteristic) -> new BaseCharacteristicWriteRequest(client, characteristic, id, preparedWrite, responseNeeded, offset, value));
+                (client, characteristic) -> new BaseCharacteristicWriteRequest(client, characteristic, id, preparedWrite, responseNeeded, offset, new BaseValue(value)));
     }
 
     private void handleCallbackError(@NonNull Throwable throwable) {

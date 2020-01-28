@@ -10,10 +10,13 @@ import com.nexenio.rxandroidbleserver.response.BaseServerResponse;
 import com.nexenio.rxandroidbleserver.response.RxBleServerResponse;
 import com.nexenio.rxandroidbleserver.response.ServerErrorResponse;
 import com.nexenio.rxandroidbleserver.response.ServerWriteResponse;
+import com.nexenio.rxandroidbleserver.service.value.BaseValue;
+import com.nexenio.rxandroidbleserver.service.value.RxBleValue;
 
 import java.util.UUID;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import io.reactivex.Completable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
@@ -21,6 +24,9 @@ import io.reactivex.Single;
 public class BaseDescriptor implements RxBleDescriptor {
 
     protected final BluetoothGattDescriptor gattDescriptor;
+
+    @Nullable
+    protected RxBleValue value;
 
     public BaseDescriptor(@NonNull UUID uuid, int permissions) {
         this.gattDescriptor = new BluetoothGattDescriptor(uuid, permissions);
@@ -41,22 +47,24 @@ public class BaseDescriptor implements RxBleDescriptor {
     }
 
     @Override
-    public Single<byte[]> getValue() {
-        return Single.defer(() -> Single.just(gattDescriptor.getValue()));
+    public Single<RxBleValue> getValue() {
+        return updateValueFromCharacteristic()
+                .andThen(Single.just(value));
     }
 
     @Override
-    public Completable setValue(@NonNull byte[] value) {
-        return Completable.fromAction(() -> gattDescriptor.setValue(value));
+    public Completable setValue(@NonNull RxBleValue value) {
+        return Completable.fromCallable(() -> this.value = value)
+                .andThen(updateCharacteristicFromValue());
     }
 
     @Override
-    public Single<byte[]> getValue(@NonNull RxBleClient client) {
+    public Single<RxBleValue> getValue(@NonNull RxBleClient client) {
         return getValue();
     }
 
     @Override
-    public Completable setValue(@NonNull byte[] value, @NonNull RxBleClient client) {
+    public Completable setValue(@NonNull RxBleValue value, @NonNull RxBleClient client) {
         return setValue(value);
     }
 
@@ -89,6 +97,23 @@ public class BaseDescriptor implements RxBleDescriptor {
                 return Maybe.empty();
             }
         })).onErrorReturnItem(new ServerErrorResponse(request));
+    }
+
+    private Completable updateValueFromCharacteristic() {
+        return Completable.fromAction(() -> {
+            if (value == null) {
+                value = new BaseValue();
+            }
+            value.setBytes(gattDescriptor.getValue());
+        });
+    }
+
+    private Completable updateCharacteristicFromValue() {
+        return Completable.fromAction(() -> {
+            if (value != null) {
+                gattDescriptor.setValue(value.getBytes());
+            }
+        });
     }
 
 }

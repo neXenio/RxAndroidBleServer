@@ -403,7 +403,7 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
                     response.getRequestId(),
                     response.getStatus(),
                     response.getOffset(),
-                    response.getData()
+                    response.getData().getBytes()
             );
 
             if (success) {

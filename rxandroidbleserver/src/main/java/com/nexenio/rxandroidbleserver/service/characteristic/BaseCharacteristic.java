@@ -12,6 +12,8 @@ import com.nexenio.rxandroidbleserver.response.RxBleServerResponse;
 import com.nexenio.rxandroidbleserver.response.ServerErrorResponse;
 import com.nexenio.rxandroidbleserver.response.ServerWriteResponse;
 import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.RxBleDescriptor;
+import com.nexenio.rxandroidbleserver.service.value.BaseValue;
+import com.nexenio.rxandroidbleserver.service.value.RxBleValue;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -19,6 +21,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import io.reactivex.Completable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
@@ -27,6 +30,9 @@ public class BaseCharacteristic implements RxBleCharacteristic {
 
     protected final Set<RxBleDescriptor> descriptors;
     protected final BluetoothGattCharacteristic gattCharacteristic;
+
+    @Nullable
+    protected RxBleValue value;
 
     public BaseCharacteristic(@NonNull UUID uuid, int properties, int permissions) {
         this.descriptors = new HashSet<>();
@@ -68,22 +74,24 @@ public class BaseCharacteristic implements RxBleCharacteristic {
     }
 
     @Override
-    public Single<byte[]> getValue() {
-        return Single.defer(() -> Single.just(gattCharacteristic.getValue()));
+    public Single<RxBleValue> getValue() {
+        return updateValueFromCharacteristic()
+                .andThen(Single.just(value));
     }
 
     @Override
-    public Completable setValue(@NonNull byte[] value) {
-        return Completable.fromAction(() -> gattCharacteristic.setValue(value));
+    public Completable setValue(@NonNull RxBleValue value) {
+        return Completable.fromCallable(() -> this.value = value)
+                .andThen(updateCharacteristicFromValue());
     }
 
     @Override
-    public Single<byte[]> getValue(@NonNull RxBleClient client) {
+    public Single<RxBleValue> getValue(@NonNull RxBleClient client) {
         return getValue();
     }
 
     @Override
-    public Completable setValue(@NonNull byte[] value, @NonNull RxBleClient client) {
+    public Completable setValue(@NonNull RxBleValue value, @NonNull RxBleClient client) {
         return setValue(value);
     }
 
@@ -116,6 +124,23 @@ public class BaseCharacteristic implements RxBleCharacteristic {
                 return Maybe.empty();
             }
         })).onErrorReturnItem(new ServerErrorResponse(request));
+    }
+
+    private Completable updateValueFromCharacteristic() {
+        return Completable.fromAction(() -> {
+            if (value == null) {
+                value = new BaseValue();
+            }
+            value.setBytes(gattCharacteristic.getValue());
+        });
+    }
+
+    private Completable updateCharacteristicFromValue() {
+        return Completable.fromAction(() -> {
+            if (value != null) {
+                gattCharacteristic.setValue(value.getBytes());
+            }
+        });
     }
 
 }

@@ -3,6 +3,8 @@ package com.nexenio.rxandroidbleserver.service.characteristic;
 import android.bluetooth.BluetoothGattCharacteristic;
 
 import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.RxBleDescriptor;
+import com.nexenio.rxandroidbleserver.service.value.BaseValue;
+import com.nexenio.rxandroidbleserver.service.value.RxBleValue;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -19,7 +21,7 @@ public class CharacteristicBuilder {
     private int permissions;
 
     @Nullable
-    private byte[] value;
+    private RxBleValue value;
 
     private final Set<RxBleDescriptor> descriptors;
 
@@ -32,7 +34,7 @@ public class CharacteristicBuilder {
         RxBleCharacteristic characteristic = new BaseCharacteristic(uuid, properties, permissions);
 
         if (value != null) {
-            characteristic.getGattCharacteristic().setValue(value);
+            characteristic.setValue(value).blockingAwait();
         }
 
         Observable.fromIterable(descriptors)
@@ -43,6 +45,11 @@ public class CharacteristicBuilder {
     }
 
     public CharacteristicBuilder withInitialValue(@NonNull byte[] value) {
+        this.value = new BaseValue(value);
+        return this;
+    }
+
+    public CharacteristicBuilder withInitialValue(@NonNull RxBleValue value) {
         this.value = value;
         return this;
     }

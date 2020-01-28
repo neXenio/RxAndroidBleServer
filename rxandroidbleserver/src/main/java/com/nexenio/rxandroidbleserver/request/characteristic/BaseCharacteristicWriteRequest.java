@@ -2,8 +2,7 @@ package com.nexenio.rxandroidbleserver.request.characteristic;
 
 import com.nexenio.rxandroidbleserver.client.RxBleClient;
 import com.nexenio.rxandroidbleserver.service.characteristic.RxBleCharacteristic;
-
-import java.util.Arrays;
+import com.nexenio.rxandroidbleserver.service.value.RxBleValue;
 
 public class BaseCharacteristicWriteRequest extends BaseCharacteristicRequest implements RxBleCharacteristicWriteRequest {
 
@@ -11,9 +10,9 @@ public class BaseCharacteristicWriteRequest extends BaseCharacteristicRequest im
 
     protected boolean isResponseNeeded;
 
-    protected byte[] value;
+    protected RxBleValue value;
 
-    public BaseCharacteristicWriteRequest(RxBleClient client, RxBleCharacteristic characteristic, int id, boolean shouldPrepareWrite, boolean isResponseNeeded, int offset, byte[] value) {
+    public BaseCharacteristicWriteRequest(RxBleClient client, RxBleCharacteristic characteristic, int id, boolean shouldPrepareWrite, boolean isResponseNeeded, int offset, RxBleValue value) {
         super(client, characteristic, id, offset);
         this.shouldPrepareWrite = shouldPrepareWrite;
         this.isResponseNeeded = isResponseNeeded;
@@ -31,7 +30,7 @@ public class BaseCharacteristicWriteRequest extends BaseCharacteristicRequest im
     }
 
     @Override
-    public byte[] getValue() {
+    public RxBleValue getValue() {
         return value;
     }
 
@@ -44,7 +43,7 @@ public class BaseCharacteristicWriteRequest extends BaseCharacteristicRequest im
                 ", offset=" + offset +
                 ", shouldPrepareWrite=" + shouldPrepareWrite +
                 ", isResponseNeeded=" + isResponseNeeded +
-                ", value=" + Arrays.toString(value) +
+                ", value=" + value +
                 '}';
     }
 
