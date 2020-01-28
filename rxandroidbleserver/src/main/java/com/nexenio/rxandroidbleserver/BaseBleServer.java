@@ -98,7 +98,12 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
         Completable waitForDisposal = Completable.never()
                 .doFinally(() -> {
                     if (bluetoothGattServer != null) {
-                        this.bluetoothGattServer.close();
+                        try {
+                            this.bluetoothGattServer.close();
+                        } catch (Exception e) {
+                            // DeadObjectException may be thrown by the system when
+                            // unregistering the server. Nothing we can do about this.
+                        }
                         this.bluetoothGattServer = null;
                     }
                 });
@@ -153,8 +158,6 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
                     AdvertiseCallback callback = createAdvertisingCallback(advertiser, emitter);
 
                     advertiser.startAdvertising(settings, data, callback);
-
-                    emitter.setCancellable(() -> advertiser.stopAdvertising(callback));
                 }));
     }
 
@@ -164,13 +167,15 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
             @Override
             public void onStartSuccess(AdvertiseSettings settingsInEffect) {
                 super.onStartSuccess(settingsInEffect);
-                disposeActionEmitter.onSuccess(createDisposeAction(this));
+                if (!disposeActionEmitter.isDisposed()) {
+                    disposeActionEmitter.onSuccess(createDisposeAction(this));
+                }
             }
 
             @Override
             public void onStartFailure(int errorCode) {
                 super.onStartFailure(errorCode);
-                disposeActionEmitter.onError(new RxBleServerException("Unable to start advertising. Error code: " + errorCode));
+                disposeActionEmitter.tryOnError(new RxBleServerException("Unable to start advertising. Error code: " + errorCode));
             }
 
             private Action createDisposeAction(AdvertiseCallback callback) {
