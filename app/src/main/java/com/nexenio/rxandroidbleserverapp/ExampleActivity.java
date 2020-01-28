@@ -27,7 +27,6 @@ public class ExampleActivity extends AppCompatActivity {
 
     private static final String TAG = ExampleActivity.class.getSimpleName();
     private static final int REQUEST_ENABLE_BLUETOOTH = 1;
-    private static final int REQUEST_ENABLE_LOCATION_SERVICES = 2;
 
     private ExampleViewModel viewModel;
     private RxPermissions rxPermissions;

@@ -9,7 +9,9 @@ import android.bluetooth.BluetoothGattService;
 import com.nexenio.rxandroidbleserver.RxBleServerMapper;
 import com.nexenio.rxandroidbleserver.client.RxBleClient;
 import com.nexenio.rxandroidbleserver.request.characteristic.BaseCharacteristicReadRequest;
+import com.nexenio.rxandroidbleserver.request.characteristic.BaseCharacteristicWriteRequest;
 import com.nexenio.rxandroidbleserver.request.characteristic.RxBleCharacteristicReadRequest;
+import com.nexenio.rxandroidbleserver.request.characteristic.RxBleCharacteristicWriteRequest;
 import com.nexenio.rxandroidbleserver.service.RxBleService;
 import com.nexenio.rxandroidbleserver.service.characteristic.RxBleCharacteristic;
 import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.RxBleDescriptor;
@@ -58,6 +60,11 @@ public class RxBleServerCallbackMediator {
                 (client, characteristic) -> new BaseCharacteristicReadRequest(client, characteristic, id, offset));
     }
 
+    private Single<RxBleCharacteristicWriteRequest> createCharacteristicWriteRequest(BluetoothDevice device, BluetoothGattCharacteristic gattCharacteristic, int id, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
+        return Single.zip(getClient(device), getCharacteristic(gattCharacteristic),
+                (client, characteristic) -> new BaseCharacteristicWriteRequest(client, characteristic, id, preparedWrite, responseNeeded, offset, value));
+    }
+
     private void handleCallbackError(@NonNull Throwable throwable) {
         // TODO: 1/26/2020 handle callback error
         System.out.println("Callback error: " + throwable);
@@ -95,8 +102,13 @@ public class RxBleServerCallbackMediator {
             }
 
             @Override
-            public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
-                super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
+            public void onCharacteristicWriteRequest(BluetoothDevice device, int id, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
+                super.onCharacteristicWriteRequest(device, id, characteristic, preparedWrite, responseNeeded, offset, value);
+                callbackDisposable.add(createCharacteristicWriteRequest(device, characteristic, id, preparedWrite, responseNeeded, offset, value)
+                        .subscribe(
+                                request -> serverCallback.getCharacteristicWriteRequestPublisher().onNext(request),
+                                RxBleServerCallbackMediator.this::handleCallbackError
+                        ));
             }
 
             @Override
