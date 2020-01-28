@@ -80,4 +80,5 @@ public class BaseServerResponse implements RxBleServerResponse {
             return Arrays.copyOfRange(data, offset, data.length);
         }
     }
+
 }

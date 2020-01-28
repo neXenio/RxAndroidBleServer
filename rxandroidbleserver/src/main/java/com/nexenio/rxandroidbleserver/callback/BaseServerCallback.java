@@ -1,11 +1,11 @@
 package com.nexenio.rxandroidbleserver.callback;
 
 import com.nexenio.rxandroidbleserver.client.RxBleClient;
-import com.nexenio.rxandroidbleserver.service.RxBleService;
 import com.nexenio.rxandroidbleserver.request.characteristic.RxBleCharacteristicReadRequest;
 import com.nexenio.rxandroidbleserver.request.characteristic.RxBleCharacteristicWriteRequest;
 import com.nexenio.rxandroidbleserver.request.descriptor.RxBleDescriptorReadRequest;
 import com.nexenio.rxandroidbleserver.request.descriptor.RxBleDescriptorWriteRequest;
+import com.nexenio.rxandroidbleserver.service.RxBleService;
 
 import io.reactivex.subjects.PublishSubject;
 
@@ -63,4 +63,5 @@ public class BaseServerCallback implements RxBleServerCallback {
     public PublishSubject<RxBleDescriptorWriteRequest> getDescriptorWriteRequestPublisher() {
         return descriptorWriteRequestPublisher;
     }
+
 }
