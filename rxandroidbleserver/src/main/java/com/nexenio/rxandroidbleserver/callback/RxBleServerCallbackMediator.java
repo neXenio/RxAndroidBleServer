@@ -70,7 +70,7 @@ public class RxBleServerCallbackMediator {
                 super.onConnectionStateChange(device, status, newState);
                 callbackDisposable.add(getClient(device)
                         .map(client -> {
-                            client.getConnectionState().update(newState);
+                            client.setConnectionState(newState);
                             return client;
                         })
                         .subscribe(
@@ -135,4 +135,5 @@ public class RxBleServerCallbackMediator {
             }
         };
     }
+
 }

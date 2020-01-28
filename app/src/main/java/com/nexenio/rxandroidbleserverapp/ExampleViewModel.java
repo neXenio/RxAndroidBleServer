@@ -101,7 +101,7 @@ public class ExampleViewModel extends AndroidViewModel {
     private void startAdvertisingServices() {
         Log.d(TAG, "Starting to advertise services");
         UUID uuid = ExampleProfile.EXAMPLE_SERVICE_UUID;
-        advertiseServicesDisposable = bleServer.advertiseService(uuid)
+        advertiseServicesDisposable = bleServer.advertise(uuid)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe(disposable -> isAdvertisingService.postValue(true))

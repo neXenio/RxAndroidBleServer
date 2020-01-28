@@ -117,7 +117,15 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
     }
 
     @Override
-    public Completable advertiseService(@NonNull UUID uuid) {
+    public Completable provideServicesAndAdvertise(@NonNull UUID uuid) {
+        return Completable.mergeArray(
+                provideServices().subscribeOn(Schedulers.io()),
+                advertise(uuid).subscribeOn(Schedulers.io())
+        );
+    }
+
+    @Override
+    public Completable advertise(@NonNull UUID uuid) {
         return startAdvertising(uuid)
                 .timeout(ADVERTISING_START_TIMEOUT, TimeUnit.MILLISECONDS)
                 .flatMapCompletable(disposeAction -> Completable.never()

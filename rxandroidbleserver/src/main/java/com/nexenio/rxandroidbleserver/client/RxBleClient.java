@@ -4,7 +4,12 @@ import android.bluetooth.BluetoothDevice;
 
 public interface RxBleClient {
 
-    RxBleConnectionState getConnectionState();
+    boolean isConnected();
+
+    boolean isDisconnected();
+
+    void setConnectionState(int connectionState);
 
     BluetoothDevice getBluetoothDevice();
+
 }

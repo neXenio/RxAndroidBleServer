@@ -14,7 +14,9 @@ public interface RxBleServer {
 
     Completable provideServices();
 
-    Completable advertiseService(@NonNull UUID uuid);
+    Completable provideServicesAndAdvertise(@NonNull UUID uuid);
+
+    Completable advertise(@NonNull UUID uuid);
 
     Completable addService(@NonNull RxBleService service);
 
