@@ -98,12 +98,7 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
         Completable waitForDisposal = Completable.never()
                 .doFinally(() -> {
                     if (bluetoothGattServer != null) {
-                        try {
-                            this.bluetoothGattServer.close();
-                        } catch (Exception e) {
-                            // DeadObjectException may be thrown by the system when
-                            // unregistering the server. Nothing we can do about this.
-                        }
+                        this.bluetoothGattServer.close();
                         this.bluetoothGattServer = null;
                     }
                 });
