@@ -36,23 +36,24 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import io.reactivex.Completable;
-import io.reactivex.CompletableEmitter;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
+import io.reactivex.SingleEmitter;
+import io.reactivex.functions.Action;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 
 public class BaseBleServer implements RxBleServer, RxBleServerMapper {
 
-    private Context context;
+    private static final long ADVERTISING_START_TIMEOUT = TimeUnit.SECONDS.toMillis(1);
 
-    @Nullable
-    private CompletableEmitter provideServicesEmitter;
+    private Context context;
 
     @Nullable
     private BluetoothGattServer bluetoothGattServer;
@@ -70,7 +71,6 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
     private final PublishSubject<RxBleServerRequest> requestPublisher;
     private final PublishSubject<RxBleServerResponse> responsePublisher;
 
-
     public BaseBleServer(Context context) {
         this.context = context;
         services = new HashSet<>();
@@ -78,23 +78,12 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
         clientPublisher = PublishSubject.create();
         requestPublisher = PublishSubject.create();
         responsePublisher = PublishSubject.create();
-
-        requestPublisher.subscribe(System.out::println);
-        responsePublisher.subscribe(System.out::println);
-
         requestPublisher.flatMapMaybe(this::createResponse)
                 .subscribe(responsePublisher);
     }
 
     @Override
     public Completable provideServices() {
-        Completable disposePreviousServer = Completable.fromAction(() -> {
-            if (provideServicesEmitter != null && !provideServicesEmitter.isDisposed()) {
-                provideServicesEmitter.onComplete();
-            }
-            // TODO: 1/25/2020 unbind callbacks?
-        });
-
         serverCallback = new BaseServerCallback();
 
         Completable bindNewServerCallback = bindServerCallback(serverCallback);
@@ -118,8 +107,7 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
                 .flatMapCompletable(this::sendResponse)
                 .onErrorComplete(); // TODO: 1/26/2020 check this is expected behaviour
 
-        return disposePreviousServer
-                .andThen(bindNewServerCallback)
+        return bindNewServerCallback
                 .andThen(createNewServer)
                 .andThen(addServices)
                 .andThen(Completable.mergeArray(
@@ -130,8 +118,15 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
 
     @Override
     public Completable advertiseService(@NonNull UUID uuid) {
+        return startAdvertising(uuid)
+                .timeout(ADVERTISING_START_TIMEOUT, TimeUnit.MILLISECONDS)
+                .flatMapCompletable(disposeAction -> Completable.never()
+                        .doOnDispose(disposeAction));
+    }
+
+    private Single<Action> startAdvertising(@NonNull UUID uuid) {
         return getBluetoothAdvertiser()
-                .flatMapCompletable(bluetoothLeAdvertiser -> Completable.create(emitter -> {
+                .flatMap(advertiser -> Single.create(emitter -> {
 
                     // TODO: 1/25/2020 make settings adjustable
                     AdvertiseSettings settings = new AdvertiseSettings.Builder()
@@ -147,18 +142,34 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
                             .addServiceUuid(new ParcelUuid(uuid))
                             .build();
 
-                    AdvertiseCallback callback = new AdvertiseCallback() {
-                        @Override
-                        public void onStartFailure(int errorCode) {
-                            super.onStartFailure(errorCode);
-                            emitter.onError(new RxBleServerException("Unable to start advertising. Error code: " + errorCode));
-                        }
-                    };
+                    AdvertiseCallback callback = createAdvertisingCallback(advertiser, emitter);
 
-                    bluetoothLeAdvertiser.startAdvertising(settings, data, callback);
+                    advertiser.startAdvertising(settings, data, callback);
 
-                    emitter.setCancellable(() -> bluetoothLeAdvertiser.stopAdvertising(callback));
+                    emitter.setCancellable(() -> advertiser.stopAdvertising(callback));
                 }));
+    }
+
+    private AdvertiseCallback createAdvertisingCallback(@NonNull BluetoothLeAdvertiser advertiser, @NonNull SingleEmitter<Action> disposeActionEmitter) {
+        return new AdvertiseCallback() {
+
+            @Override
+            public void onStartSuccess(AdvertiseSettings settingsInEffect) {
+                super.onStartSuccess(settingsInEffect);
+                disposeActionEmitter.onSuccess(createDisposeAction(this));
+            }
+
+            @Override
+            public void onStartFailure(int errorCode) {
+                super.onStartFailure(errorCode);
+                disposeActionEmitter.onError(new RxBleServerException("Unable to start advertising. Error code: " + errorCode));
+            }
+
+            private Action createDisposeAction(AdvertiseCallback callback) {
+                return () -> advertiser.stopAdvertising(callback);
+            }
+
+        };
     }
 
     @Override
@@ -197,7 +208,7 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
                 }));
 
         return Completable.defer(() -> {
-            if (isProvidingServices()) {
+            if (bluetoothGattServer != null) {
                 return modifyGattServer;
             } else {
                 return Completable.complete();
@@ -268,10 +279,6 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
                 .flatMap(Observable::fromIterable)
                 .filter(service -> service.getGattDescriptor().equals(gattDescriptor))
                 .firstOrError();
-    }
-
-    private boolean isProvidingServices() {
-        return provideServicesEmitter != null && !provideServicesEmitter.isDisposed();
     }
 
     private Single<BluetoothManager> getBluetoothManager() {
