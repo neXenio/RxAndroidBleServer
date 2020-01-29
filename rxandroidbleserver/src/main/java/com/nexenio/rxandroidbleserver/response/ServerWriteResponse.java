@@ -5,7 +5,7 @@ import com.nexenio.rxandroidbleserver.request.RxBleWriteRequest;
 public class ServerWriteResponse extends BaseServerResponse {
 
     public ServerWriteResponse(RxBleWriteRequest request) {
-        super(request, null);
+        super(request, request.getValue());
     }
 
     @Override

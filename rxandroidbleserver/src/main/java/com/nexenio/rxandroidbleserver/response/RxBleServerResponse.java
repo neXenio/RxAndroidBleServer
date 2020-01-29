@@ -13,6 +13,6 @@ public interface RxBleServerResponse {
 
     int getOffset();
 
-    RxBleValue getData();
+    RxBleValue getValue();
 
 }

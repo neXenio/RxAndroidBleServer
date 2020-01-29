@@ -4,11 +4,12 @@ import android.bluetooth.BluetoothGatt;
 
 import com.nexenio.rxandroidbleserver.client.RxBleClient;
 import com.nexenio.rxandroidbleserver.request.RxBleServerRequest;
+import com.nexenio.rxandroidbleserver.service.value.BaseValue;
 
 public class ServerErrorResponse extends BaseServerResponse {
 
     public ServerErrorResponse(RxBleClient client, int requestId, int offset) {
-        super(client, requestId, BluetoothGatt.GATT_FAILURE, offset, null);
+        super(client, requestId, BluetoothGatt.GATT_FAILURE, offset, new BaseValue());
     }
 
     public ServerErrorResponse(RxBleServerRequest request) {

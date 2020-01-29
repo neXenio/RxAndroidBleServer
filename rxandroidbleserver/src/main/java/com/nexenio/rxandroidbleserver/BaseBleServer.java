@@ -106,6 +106,7 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
 
         Completable respondToRequests = responsePublisher
                 .flatMapCompletable(this::sendResponse)
+                .doOnError(throwable -> Timber.w(throwable, "Unable to send response"))
                 .onErrorComplete(); // TODO: 1/26/2020 check this is expected behaviour
 
         return bindNewServerCallback
@@ -406,7 +407,7 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
                     response.getRequestId(),
                     response.getStatus(),
                     response.getOffset(),
-                    response.getData().getBytes()
+                    response.getValue().getBytes()
             );
 
             if (success) {

@@ -60,6 +60,7 @@ public final class ExampleProfile {
                         .putInt(42)
                         .array())
                 .allowRead()
+                .allowWrite()
                 .build();
     }
 

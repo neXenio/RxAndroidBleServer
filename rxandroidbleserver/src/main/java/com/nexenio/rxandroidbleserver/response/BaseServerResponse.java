@@ -8,6 +8,8 @@ import com.nexenio.rxandroidbleserver.service.value.RxBleValue;
 
 import java.util.Arrays;
 
+import androidx.annotation.NonNull;
+
 public class BaseServerResponse implements RxBleServerResponse {
 
     private final RxBleClient client;
@@ -18,23 +20,23 @@ public class BaseServerResponse implements RxBleServerResponse {
 
     private final int offset;
 
-    private final RxBleValue data;
+    private final RxBleValue value;
 
-    public BaseServerResponse(RxBleClient client, int requestId, int status, int offset, RxBleValue data) {
+    public BaseServerResponse(@NonNull RxBleClient client, int requestId, int status, int offset, @NonNull RxBleValue value) {
         this.client = client;
         this.requestId = requestId;
         this.status = status;
         this.offset = offset;
-        this.data = data;
+        this.value = value;
     }
 
-    public BaseServerResponse(RxBleServerRequest request, RxBleValue data) {
+    public BaseServerResponse(@NonNull RxBleServerRequest request, @NonNull RxBleValue value) {
         this(
                 request.getClient(),
                 request.getRequestId(),
                 BluetoothGatt.GATT_SUCCESS,
                 request.getOffset(),
-                data
+                value
         );
     }
 
@@ -59,8 +61,8 @@ public class BaseServerResponse implements RxBleServerResponse {
     }
 
     @Override
-    public RxBleValue getData() {
-        return data;
+    public RxBleValue getValue() {
+        return value;
     }
 
     @Override
@@ -70,7 +72,7 @@ public class BaseServerResponse implements RxBleServerResponse {
                 ", requestId=" + requestId +
                 ", status=" + status +
                 ", offset=" + offset +
-                ", data=" + data +
+                ", value=" + value +
                 '}';
     }
 
