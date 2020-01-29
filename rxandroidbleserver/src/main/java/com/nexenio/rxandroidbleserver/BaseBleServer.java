@@ -48,6 +48,7 @@ import io.reactivex.SingleEmitter;
 import io.reactivex.functions.Action;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
+import timber.log.Timber;
 
 public class BaseBleServer implements RxBleServer, RxBleServerMapper {
 
@@ -236,12 +237,12 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
 
     @Override
     public Completable connect(@NonNull RxBleClient client) {
-        return null;
+        return Completable.error(new RxBleServerException("Not implemented"));
     }
 
     @Override
     public Completable disconnect(@NonNull RxBleClient client) {
-        return null;
+        return Completable.error(new RxBleServerException("Not implemented"));
     }
 
     @Override
@@ -361,6 +362,7 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
     }
 
     private Maybe<RxBleServerResponse> createResponse(@NonNull RxBleServerRequest request) {
+        Timber.d("createResponse() called with: request = [%s]", request);
         return Maybe.defer(() -> {
             if (request instanceof RxBleCharacteristicReadRequest) {
                 return createRequestResponse((RxBleCharacteristicReadRequest) request).toMaybe();
@@ -393,6 +395,7 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
     }
 
     private Completable sendResponse(RxBleServerResponse response) {
+        Timber.d("sendResponse() called with: response = [%s]", response);
         return Completable.defer(() -> {
             if (bluetoothGattServer == null) {
                 return Completable.error(new RxBleServerException("GATT server not available"));

@@ -22,6 +22,7 @@ import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
+import timber.log.Timber;
 
 public class ExampleActivity extends AppCompatActivity {
 
@@ -40,6 +41,10 @@ public class ExampleActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_example);
+
+        if (BuildConfig.DEBUG) {
+            Timber.plant(new Timber.DebugTree());
+        }
 
         rxPermissions = new RxPermissions(this);
         viewModel = new ViewModelProvider(this).get(ExampleViewModel.class);
