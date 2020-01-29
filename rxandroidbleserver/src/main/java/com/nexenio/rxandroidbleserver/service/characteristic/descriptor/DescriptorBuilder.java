@@ -29,7 +29,7 @@ public class DescriptorBuilder {
         if (value != null) {
             descriptor.setValue(value);
         }
-        
+
         return descriptor;
     }
 

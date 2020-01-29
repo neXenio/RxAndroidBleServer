@@ -1,10 +1,10 @@
-package com.nexenio.rxandroidbleserver.request.characteristic;
+package com.nexenio.rxandroidbleserver.request.descriptor;
 
 import com.nexenio.rxandroidbleserver.client.RxBleClient;
-import com.nexenio.rxandroidbleserver.service.characteristic.RxBleCharacteristic;
+import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.RxBleDescriptor;
 import com.nexenio.rxandroidbleserver.service.value.RxBleValue;
 
-public class BaseCharacteristicWriteRequest extends BaseCharacteristicRequest implements RxBleCharacteristicWriteRequest {
+public class BaseDescriptorWriteRequest extends BaseDescriptorRequest implements RxBleDescriptorWriteRequest {
 
     protected boolean shouldPrepareWrite;
 
@@ -12,8 +12,8 @@ public class BaseCharacteristicWriteRequest extends BaseCharacteristicRequest im
 
     protected RxBleValue value;
 
-    public BaseCharacteristicWriteRequest(RxBleClient client, RxBleCharacteristic characteristic, int id, boolean shouldPrepareWrite, boolean isResponseNeeded, int offset, RxBleValue value) {
-        super(client, characteristic, id, offset);
+    public BaseDescriptorWriteRequest(RxBleClient client, RxBleDescriptor descriptor, int id, boolean shouldPrepareWrite, boolean isResponseNeeded, int offset, RxBleValue value) {
+        super(client, descriptor, id, offset);
         this.shouldPrepareWrite = shouldPrepareWrite;
         this.isResponseNeeded = isResponseNeeded;
         this.value = value;
@@ -36,8 +36,8 @@ public class BaseCharacteristicWriteRequest extends BaseCharacteristicRequest im
 
     @Override
     public String toString() {
-        return "BaseCharacteristicWriteRequest{" +
-                " descriptor=" + characteristic +
+        return "BaseDescriptorWriteRequest{" +
+                " descriptor=" + descriptor +
                 ", client=" + client +
                 ", requestId=" + requestId +
                 ", offset=" + offset +

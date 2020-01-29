@@ -11,8 +11,8 @@ public class BaseCharacteristicReadRequest extends BaseCharacteristicRequest imp
 
     @Override
     public String toString() {
-        return "BaseCharacteristicReadRequest{" +
-                "characteristic=" + characteristic +
+        return "BaseDescriptorReadRequest{" +
+                "descriptor=" + characteristic +
                 ", client=" + client +
                 ", requestId=" + requestId +
                 ", offset=" + offset +
