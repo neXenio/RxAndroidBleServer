@@ -31,7 +31,7 @@ public class BaseServerResponse implements RxBleServerResponse {
     public BaseServerResponse(RxBleServerRequest request, RxBleValue data) {
         this(
                 request.getClient(),
-                request.getId(),
+                request.getRequestId(),
                 BluetoothGatt.GATT_SUCCESS,
                 request.getOffset(),
                 data

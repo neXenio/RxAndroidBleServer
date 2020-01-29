@@ -14,7 +14,7 @@ public class BaseCharacteristicReadRequest extends BaseCharacteristicRequest imp
         return "BaseCharacteristicReadRequest{" +
                 "characteristic=" + characteristic +
                 ", client=" + client +
-                ", id=" + id +
+                ", requestId=" + requestId +
                 ", offset=" + offset +
                 '}';
     }

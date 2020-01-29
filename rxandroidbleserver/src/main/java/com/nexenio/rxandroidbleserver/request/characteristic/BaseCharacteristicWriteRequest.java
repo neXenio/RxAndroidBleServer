@@ -39,7 +39,7 @@ public class BaseCharacteristicWriteRequest extends BaseCharacteristicRequest im
         return "BaseCharacteristicWriteRequest{" +
                 " characteristic=" + characteristic +
                 ", client=" + client +
-                ", id=" + id +
+                ", requestId=" + requestId +
                 ", offset=" + offset +
                 ", shouldPrepareWrite=" + shouldPrepareWrite +
                 ", isResponseNeeded=" + isResponseNeeded +

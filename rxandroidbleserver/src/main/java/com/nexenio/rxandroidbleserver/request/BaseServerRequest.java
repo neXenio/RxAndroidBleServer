@@ -6,13 +6,13 @@ public abstract class BaseServerRequest implements RxBleServerRequest {
 
     protected RxBleClient client;
 
-    protected int id;
+    protected int requestId;
 
     protected int offset;
 
-    public BaseServerRequest(RxBleClient client, int id, int offset) {
+    public BaseServerRequest(RxBleClient client, int requestId, int offset) {
         this.client = client;
-        this.id = id;
+        this.requestId = requestId;
         this.offset = offset;
     }
 
@@ -22,8 +22,8 @@ public abstract class BaseServerRequest implements RxBleServerRequest {
     }
 
     @Override
-    public int getId() {
-        return id;
+    public int getRequestId() {
+        return requestId;
     }
 
     @Override
@@ -35,7 +35,7 @@ public abstract class BaseServerRequest implements RxBleServerRequest {
     public String toString() {
         return "BaseServerRequest{" +
                 "client=" + client +
-                ", id=" + id +
+                ", requestId=" + requestId +
                 ", offset=" + offset +
                 '}';
     }

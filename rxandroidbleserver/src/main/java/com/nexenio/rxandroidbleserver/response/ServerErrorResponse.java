@@ -12,7 +12,7 @@ public class ServerErrorResponse extends BaseServerResponse {
     }
 
     public ServerErrorResponse(RxBleServerRequest request) {
-        this(request.getClient(), request.getId(), request.getOffset());
+        this(request.getClient(), request.getRequestId(), request.getOffset());
     }
 
     @Override
