@@ -1,5 +1,6 @@
 package com.nexenio.rxandroidbleserver.service.value.provider;
 
+import com.nexenio.rxandroidbleserver.service.value.BaseValue;
 import com.nexenio.rxandroidbleserver.service.value.RxBleValue;
 
 import androidx.annotation.NonNull;
@@ -15,6 +16,7 @@ public class BaseSharedValueProvider implements RxBleSharedValueProvider {
     private final PublishSubject<RxBleValue> valuePublisher;
 
     public BaseSharedValueProvider() {
+        this.value = new BaseValue();
         this.valuePublisher = PublishSubject.create();
     }
 

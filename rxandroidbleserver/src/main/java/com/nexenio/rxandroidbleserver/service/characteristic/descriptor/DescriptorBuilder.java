@@ -27,7 +27,7 @@ public class DescriptorBuilder {
         RxBleDescriptor descriptor = new BaseDescriptor(uuid, permissions);
 
         if (value != null) {
-            descriptor.setValue(value);
+            descriptor.setValue(value).blockingAwait();
         }
 
         return descriptor;

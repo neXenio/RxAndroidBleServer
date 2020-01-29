@@ -2,6 +2,9 @@ package com.nexenio.rxandroidbleserver.service.characteristic.descriptor;
 
 import android.bluetooth.BluetoothGattDescriptor;
 
+import com.nexenio.rxandroidbleserver.service.value.BaseValue;
+import com.nexenio.rxandroidbleserver.service.value.RxBleValue;
+
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
@@ -15,7 +18,8 @@ public class CharacteristicUserDescription extends BaseDescriptor {
 
     public CharacteristicUserDescription(@NonNull String description) {
         super(UUID, PERMISSIONS);
-        getGattDescriptor().setValue(description.getBytes(StandardCharsets.UTF_8));
+        RxBleValue value = new BaseValue(description.getBytes(StandardCharsets.UTF_8));
+        sharedValueProvider.setValue(value).blockingAwait();
     }
 
 }

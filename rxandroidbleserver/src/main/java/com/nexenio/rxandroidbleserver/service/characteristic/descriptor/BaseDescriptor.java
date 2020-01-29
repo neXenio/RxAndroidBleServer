@@ -7,7 +7,9 @@ import com.nexenio.rxandroidbleserver.request.RxBleWriteRequest;
 import com.nexenio.rxandroidbleserver.request.descriptor.RxBleDescriptorReadRequest;
 import com.nexenio.rxandroidbleserver.request.descriptor.RxBleDescriptorWriteRequest;
 import com.nexenio.rxandroidbleserver.response.RxBleServerResponse;
+import com.nexenio.rxandroidbleserver.service.value.BaseValue;
 import com.nexenio.rxandroidbleserver.service.value.BaseValueContainer;
+import com.nexenio.rxandroidbleserver.service.value.RxBleValue;
 
 import java.util.UUID;
 
@@ -20,11 +22,19 @@ public class BaseDescriptor extends BaseValueContainer implements RxBleDescripto
     protected final BluetoothGattDescriptor gattDescriptor;
 
     public BaseDescriptor(@NonNull UUID uuid, int permissions) {
-        this.gattDescriptor = new BluetoothGattDescriptor(uuid, permissions);
+        this(new BluetoothGattDescriptor(uuid, permissions));
     }
 
     public BaseDescriptor(@NonNull BluetoothGattDescriptor gattDescriptor) {
         this.gattDescriptor = gattDescriptor;
+        if (gattDescriptor.getValue() != null) {
+            RxBleValue initialValue = new BaseValue(gattDescriptor.getValue());
+            if (this.shareValues) {
+                sharedValueProvider.setValue(initialValue).blockingAwait();
+            } else {
+                // TODO: 2020-01-29 initialize client values?
+            }
+        }
     }
 
     @Override
@@ -50,7 +60,8 @@ public class BaseDescriptor extends BaseValueContainer implements RxBleDescripto
     @Override
     public String toString() {
         return "BaseDescriptor{" +
-                "sharedValue=" + sharedValueProvider.getValue().blockingGet() +
+                "uuid=" + gattDescriptor.getUuid() +
+                ", sharedValue=" + sharedValueProvider.getValue().blockingGet() +
                 '}';
     }
 
