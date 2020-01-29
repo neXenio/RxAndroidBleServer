@@ -79,6 +79,7 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
         clientPublisher = PublishSubject.create();
         requestPublisher = PublishSubject.create();
         responsePublisher = PublishSubject.create();
+
         requestPublisher.flatMapMaybe(this::createResponse)
                 .subscribe(responsePublisher);
     }
@@ -96,6 +97,19 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
         Completable addServices = Observable.defer(() -> Observable.fromIterable(getServices()))
                 .flatMapCompletable(this::addService);
 
+        Completable respondToRequests = responsePublisher
+                .flatMapCompletable(this::sendResponse);
+
+        Completable observeClients = clientPublisher
+                .doOnNext(client -> {
+                    if (client.isConnected()) {
+                        Timber.i("Client connected: %s", client);
+                    } else if (client.isDisconnected()) {
+                        Timber.i("Client disconnected: %s", client);
+                    }
+                })
+                .ignoreElements();
+
         Completable waitForDisposal = Completable.never()
                 .doFinally(() -> {
                     if (bluetoothGattServer != null) {
@@ -104,18 +118,16 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
                     }
                 });
 
-        Completable respondToRequests = responsePublisher
-                .flatMapCompletable(this::sendResponse)
-                .doOnError(throwable -> Timber.w(throwable, "Unable to send response"))
-                .onErrorComplete(); // TODO: 1/26/2020 check this is expected behaviour
-
         return bindNewServerCallback
                 .andThen(createNewServer)
                 .andThen(addServices)
                 .andThen(Completable.mergeArray(
                         respondToRequests.subscribeOn(Schedulers.io()),
+                        observeClients.subscribeOn(Schedulers.io()),
                         waitForDisposal.subscribeOn(Schedulers.io())
-                ));
+                ))
+                .doOnSubscribe(disposable -> Timber.i("Starting to provide %d service(s)", getServices().size()))
+                .doFinally(() -> Timber.i("Services providing stopped"));
     }
 
     @Override
@@ -131,7 +143,9 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
         return startAdvertising(uuid)
                 .timeout(ADVERTISING_START_TIMEOUT, TimeUnit.MILLISECONDS)
                 .flatMapCompletable(disposeAction -> Completable.never()
-                        .doOnDispose(disposeAction));
+                        .doOnDispose(disposeAction))
+                .doOnSubscribe(disposable -> Timber.i("Starting to advertise service: %s", uuid))
+                .doFinally(() -> Timber.i("Service advertising stopped"));
     }
 
     private Single<Action> startAdvertising(@NonNull UUID uuid) {
@@ -139,6 +153,7 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
                 .flatMap(advertiser -> Single.create(emitter -> {
 
                     // TODO: 1/25/2020 make settings adjustable
+
                     AdvertiseSettings settings = new AdvertiseSettings.Builder()
                             .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
                             .setConnectable(true)
@@ -201,7 +216,10 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
             } else {
                 return Completable.complete();
             }
-        }).doOnComplete(() -> services.add(service));
+        }).doOnComplete(() -> {
+            services.add(service);
+            Timber.d("Added service: %s", service);
+        });
     }
 
     @Override
@@ -223,7 +241,10 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
             } else {
                 return Completable.complete();
             }
-        }).doOnComplete(() -> services.remove(service));
+        }).doOnComplete(() -> {
+            services.remove(service);
+            Timber.d("Removed service: %s", service);
+        });
     }
 
     @Override
@@ -363,7 +384,6 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
     }
 
     private Maybe<RxBleServerResponse> createResponse(@NonNull RxBleServerRequest request) {
-        Timber.d("createResponse() called with: request = [%s]", request);
         return Maybe.defer(() -> {
             if (request instanceof RxBleCharacteristicReadRequest) {
                 return createRequestResponse((RxBleCharacteristicReadRequest) request).toMaybe();
@@ -376,7 +396,7 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
             } else {
                 return Maybe.error(new RxBleServerException("Unable to create response for request: " + request));
             }
-        });
+        }).doOnSubscribe(disposable -> Timber.d("Processing request: %s", request));
     }
 
     private Single<RxBleServerResponse> createRequestResponse(@NonNull RxBleCharacteristicReadRequest request) {
@@ -396,7 +416,6 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
     }
 
     private Completable sendResponse(RxBleServerResponse response) {
-        Timber.d("sendResponse() called with: response = [%s]", response);
         return Completable.defer(() -> {
             if (bluetoothGattServer == null) {
                 return Completable.error(new RxBleServerException("GATT server not available"));
@@ -415,7 +434,7 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
             } else {
                 return Completable.error(new RxBleServerException("Unable to send GATT response: " + response));
             }
-        });
+        }).doOnSubscribe(disposable -> Timber.d("Sending response: %s", response));
     }
 
 }

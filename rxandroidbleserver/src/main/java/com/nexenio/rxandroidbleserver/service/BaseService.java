@@ -58,4 +58,12 @@ public class BaseService implements RxBleService {
         return gattService;
     }
 
+    @Override
+    public String toString() {
+        return "BaseService{" +
+                "uuid=" + gattService.getUuid() +
+                ", characteristics=" + characteristics +
+                '}';
+    }
+
 }

@@ -11,8 +11,8 @@ import com.nexenio.rxandroidbleserver.request.characteristic.RxBleCharacteristic
 import com.nexenio.rxandroidbleserver.response.RxBleServerResponse;
 import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.RxBleDescriptor;
 import com.nexenio.rxandroidbleserver.service.value.BaseValue;
-import com.nexenio.rxandroidbleserver.service.value.RxBleValue;
 import com.nexenio.rxandroidbleserver.service.value.BaseValueContainer;
+import com.nexenio.rxandroidbleserver.service.value.RxBleValue;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -23,7 +23,6 @@ import androidx.annotation.NonNull;
 import io.reactivex.Completable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
-import timber.log.Timber;
 
 public class BaseCharacteristic extends BaseValueContainer implements RxBleCharacteristic {
 
@@ -46,9 +45,6 @@ public class BaseCharacteristic extends BaseValueContainer implements RxBleChara
             }
         }
         // TODO: 1/26/2020 add descriptors if available
-
-        getValueChanges()
-                .subscribe(value -> Timber.i("Value changed: %s", value));
     }
 
     @Override
@@ -92,7 +88,8 @@ public class BaseCharacteristic extends BaseValueContainer implements RxBleChara
     @Override
     public String toString() {
         return "BaseCharacteristic{" +
-                "descriptors=" + descriptors +
+                "uuid=" + gattCharacteristic.getUuid() +
+                ", descriptors=" + descriptors +
                 ", sharedValue=" + sharedValueProvider.getValue().blockingGet() +
                 '}';
     }
