@@ -43,7 +43,7 @@ public class BaseCharacteristicWriteRequest extends BaseCharacteristicRequest im
                 ", offset=" + offset +
                 ", shouldPrepareWrite=" + shouldPrepareWrite +
                 ", isResponseNeeded=" + isResponseNeeded +
-                ", value=" + value +
+                ", sharedValue=" + value +
                 '}';
     }
 

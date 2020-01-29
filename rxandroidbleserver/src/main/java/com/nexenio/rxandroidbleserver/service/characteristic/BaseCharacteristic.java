@@ -3,17 +3,16 @@ package com.nexenio.rxandroidbleserver.service.characteristic;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 
-import com.nexenio.rxandroidbleserver.client.RxBleClient;
 import com.nexenio.rxandroidbleserver.exception.RxBleServerException;
+import com.nexenio.rxandroidbleserver.request.RxBleReadRequest;
+import com.nexenio.rxandroidbleserver.request.RxBleWriteRequest;
 import com.nexenio.rxandroidbleserver.request.characteristic.RxBleCharacteristicReadRequest;
 import com.nexenio.rxandroidbleserver.request.characteristic.RxBleCharacteristicWriteRequest;
-import com.nexenio.rxandroidbleserver.response.BaseServerResponse;
 import com.nexenio.rxandroidbleserver.response.RxBleServerResponse;
-import com.nexenio.rxandroidbleserver.response.ServerErrorResponse;
-import com.nexenio.rxandroidbleserver.response.ServerWriteResponse;
 import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.RxBleDescriptor;
 import com.nexenio.rxandroidbleserver.service.value.BaseValue;
 import com.nexenio.rxandroidbleserver.service.value.RxBleValue;
+import com.nexenio.rxandroidbleserver.service.value.BaseValueContainer;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -24,24 +23,32 @@ import androidx.annotation.NonNull;
 import io.reactivex.Completable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
+import timber.log.Timber;
 
-public class BaseCharacteristic implements RxBleCharacteristic {
-
-    protected RxBleValue value = new BaseValue();
+public class BaseCharacteristic extends BaseValueContainer implements RxBleCharacteristic {
 
     protected final Set<RxBleDescriptor> descriptors;
     protected final BluetoothGattCharacteristic gattCharacteristic;
 
     public BaseCharacteristic(@NonNull UUID uuid, int properties, int permissions) {
-        this.descriptors = new HashSet<>();
-        this.gattCharacteristic = new BluetoothGattCharacteristic(uuid, properties, permissions);
+        this(new BluetoothGattCharacteristic(uuid, properties, permissions));
     }
 
     public BaseCharacteristic(@NonNull BluetoothGattCharacteristic gattCharacteristic) {
         this.descriptors = new HashSet<>();
         this.gattCharacteristic = gattCharacteristic;
-        updateValueFromCharacteristic().blockingAwait();
+        if (gattCharacteristic.getValue() != null) {
+            RxBleValue initialValue = new BaseValue(gattCharacteristic.getValue());
+            if (this.shareValues) {
+                sharedValueProvider.setValue(initialValue).blockingAwait();
+            } else {
+                // TODO: 2020-01-29 initialize client values?
+            }
+        }
         // TODO: 1/26/2020 add descriptors if available
+
+        getValueChanges()
+                .subscribe(value -> Timber.i("Value changed: %s", value));
     }
 
     @Override
@@ -73,75 +80,20 @@ public class BaseCharacteristic implements RxBleCharacteristic {
     }
 
     @Override
-    public Single<RxBleValue> getValue() {
-        return updateValueFromCharacteristic()
-                .andThen(Single.just(value));
-    }
-
-    @Override
-    public Completable setValue(@NonNull RxBleValue value) {
-        return Completable.fromCallable(() -> this.value = value)
-                .andThen(updateCharacteristicFromValue());
-    }
-
-    @Override
-    public Single<RxBleValue> getValue(@NonNull RxBleClient client) {
-        return getValue();
-    }
-
-    @Override
-    public Completable setValue(@NonNull RxBleValue value, @NonNull RxBleClient client) {
-        return setValue(value);
-    }
-
-    @Override
     public Single<RxBleServerResponse> createReadRequestResponse(@NonNull RxBleCharacteristicReadRequest request) {
-        return getValue(request.getClient())
-                .map(value -> new BaseServerResponse(request, value))
-                .cast(RxBleServerResponse.class)
-                .onErrorReturnItem(new ServerErrorResponse(request));
+        return createReadRequestResponse((RxBleReadRequest) request);
     }
 
     @Override
     public Maybe<RxBleServerResponse> createWriteRequestResponse(@NonNull RxBleCharacteristicWriteRequest request) {
-        Completable writeValue = Completable.defer(() -> {
-            if (request.getOffset() == 0) {
-                return setValue(request.getValue(), request.getClient());
-            } else {
-                // TODO: 1/26/2020 implement long writes support
-                return Completable.error(new RxBleServerException("Long writes are not yet supported"));
-            }
-        });
-
-        Maybe<RxBleServerResponse> createResponse = Maybe.just(new ServerWriteResponse(request))
-                .cast(RxBleServerResponse.class);
-
-        return writeValue.andThen(Maybe.defer(() -> {
-            if (request.isResponseNeeded()) {
-                return createResponse;
-            } else {
-                return Maybe.empty();
-            }
-        })).onErrorReturnItem(new ServerErrorResponse(request));
-    }
-
-    private Completable updateValueFromCharacteristic() {
-        return Completable.fromAction(() -> {
-            if (gattCharacteristic.getValue() != null) {
-                value.setBytes(gattCharacteristic.getValue());
-            }
-        });
-    }
-
-    private Completable updateCharacteristicFromValue() {
-        return Completable.fromAction(() -> gattCharacteristic.setValue(value.getBytes()));
+        return createWriteRequestResponse((RxBleWriteRequest) request);
     }
 
     @Override
     public String toString() {
         return "BaseCharacteristic{" +
-                "value=" + value +
-                ", descriptors=" + descriptors +
+                "descriptors=" + descriptors +
+                ", sharedValue=" + sharedValueProvider.getValue().blockingGet() +
                 '}';
     }
 

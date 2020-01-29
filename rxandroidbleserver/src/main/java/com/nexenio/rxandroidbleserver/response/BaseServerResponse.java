@@ -72,7 +72,7 @@ public class BaseServerResponse implements RxBleServerResponse {
                 ", requestId=" + requestId +
                 ", status=" + status +
                 ", offset=" + offset +
-                ", value=" + value +
+                ", sharedValue=" + value +
                 '}';
     }
 

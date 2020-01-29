@@ -5,8 +5,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import com.nexenio.rxandroidbleserver.request.descriptor.RxBleDescriptorReadRequest;
 import com.nexenio.rxandroidbleserver.request.descriptor.RxBleDescriptorWriteRequest;
 import com.nexenio.rxandroidbleserver.response.RxBleServerResponse;
-import com.nexenio.rxandroidbleserver.service.RxBleClientValueProvider;
-import com.nexenio.rxandroidbleserver.service.RxBleSharedValueProvider;
+import com.nexenio.rxandroidbleserver.service.value.RxBleValueContainer;
 
 import java.util.UUID;
 
@@ -14,7 +13,7 @@ import androidx.annotation.NonNull;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 
-public interface RxBleDescriptor extends RxBleClientValueProvider, RxBleSharedValueProvider {
+public interface RxBleDescriptor extends RxBleValueContainer {
 
     UUID getUuid();
 

@@ -43,7 +43,7 @@ public class BaseDescriptorWriteRequest extends BaseDescriptorRequest implements
                 ", offset=" + offset +
                 ", shouldPrepareWrite=" + shouldPrepareWrite +
                 ", isResponseNeeded=" + isResponseNeeded +
-                ", value=" + value +
+                ", sharedValue=" + value +
                 '}';
     }
 

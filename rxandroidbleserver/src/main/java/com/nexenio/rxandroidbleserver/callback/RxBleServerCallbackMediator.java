@@ -122,7 +122,7 @@ public class RxBleServerCallbackMediator {
 
             @Override
             public void onCharacteristicWriteRequest(BluetoothDevice device, int id, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
-                Timber.v("onCharacteristicWriteRequest() called with: device = [%s], id = [%s], characteristic = [%s], preparedWrite = [%s], responseNeeded = [%s], offset = [%s], value = [%s]", device, id, characteristic, preparedWrite, responseNeeded, offset, value);
+                Timber.v("onCharacteristicWriteRequest() called with: device = [%s], id = [%s], characteristic = [%s], preparedWrite = [%s], responseNeeded = [%s], offset = [%s], sharedValue = [%s]", device, id, characteristic, preparedWrite, responseNeeded, offset, value);
                 super.onCharacteristicWriteRequest(device, id, characteristic, preparedWrite, responseNeeded, offset, value);
                 callbackDisposable.add(createCharacteristicWriteRequest(device, characteristic, id, preparedWrite, responseNeeded, offset, value)
                         .subscribe(
@@ -144,7 +144,7 @@ public class RxBleServerCallbackMediator {
 
             @Override
             public void onDescriptorWriteRequest(BluetoothDevice device, int id, BluetoothGattDescriptor descriptor, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
-                Timber.v("onDescriptorWriteRequest() called with: device = [%s], requestId = [%s], descriptor = [%s], preparedWrite = [%s], responseNeeded = [%s], offset = [%s], value = [%s]", device, id, descriptor, preparedWrite, responseNeeded, offset, value);
+                Timber.v("onDescriptorWriteRequest() called with: device = [%s], requestId = [%s], descriptor = [%s], preparedWrite = [%s], responseNeeded = [%s], offset = [%s], sharedValue = [%s]", device, id, descriptor, preparedWrite, responseNeeded, offset, value);
                 super.onDescriptorWriteRequest(device, id, descriptor, preparedWrite, responseNeeded, offset, value);
                 callbackDisposable.add(createDescriptorWriteRequest(device, descriptor, id, preparedWrite, responseNeeded, offset, value)
                         .subscribe(
