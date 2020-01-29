@@ -16,17 +16,15 @@ import com.nexenio.rxandroidbleserver.service.value.RxBleValue;
 import java.util.UUID;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import io.reactivex.Completable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 
 public class BaseDescriptor implements RxBleDescriptor {
 
-    protected final BluetoothGattDescriptor gattDescriptor;
+    protected RxBleValue value = new BaseValue();
 
-    @Nullable
-    protected RxBleValue value;
+    protected final BluetoothGattDescriptor gattDescriptor;
 
     public BaseDescriptor(@NonNull UUID uuid, int permissions) {
         this.gattDescriptor = new BluetoothGattDescriptor(uuid, permissions);
@@ -34,6 +32,7 @@ public class BaseDescriptor implements RxBleDescriptor {
 
     public BaseDescriptor(@NonNull BluetoothGattDescriptor gattDescriptor) {
         this.gattDescriptor = gattDescriptor;
+        updateValueFromDescriptor().blockingAwait();
     }
 
     @Override
@@ -48,14 +47,14 @@ public class BaseDescriptor implements RxBleDescriptor {
 
     @Override
     public Single<RxBleValue> getValue() {
-        return updateValueFromCharacteristic()
+        return updateValueFromDescriptor()
                 .andThen(Single.just(value));
     }
 
     @Override
     public Completable setValue(@NonNull RxBleValue value) {
         return Completable.fromCallable(() -> this.value = value)
-                .andThen(updateCharacteristicFromValue());
+                .andThen(updateDescriptorFromValue());
     }
 
     @Override
@@ -99,21 +98,23 @@ public class BaseDescriptor implements RxBleDescriptor {
         })).onErrorReturnItem(new ServerErrorResponse(request));
     }
 
-    private Completable updateValueFromCharacteristic() {
+    private Completable updateValueFromDescriptor() {
         return Completable.fromAction(() -> {
-            if (value == null) {
-                value = new BaseValue();
+            if (gattDescriptor.getValue() != null) {
+                value.setBytes(gattDescriptor.getValue());
             }
-            value.setBytes(gattDescriptor.getValue());
         });
     }
 
-    private Completable updateCharacteristicFromValue() {
-        return Completable.fromAction(() -> {
-            if (value != null) {
-                gattDescriptor.setValue(value.getBytes());
-            }
-        });
+    private Completable updateDescriptorFromValue() {
+        return Completable.fromAction(() -> gattDescriptor.setValue(value.getBytes()));
+    }
+
+    @Override
+    public String toString() {
+        return "BaseDescriptor{" +
+                "value=" + value +
+                '}';
     }
 
 }

@@ -25,4 +25,11 @@ public class BaseValue implements RxBleValue {
         this.bytes = bytes;
     }
 
+    @Override
+    public String toString() {
+        return "BaseValue{" +
+                "bytes=0x" + ValueUtil.bytesToHex(bytes) +
+                '}';
+    }
+
 }

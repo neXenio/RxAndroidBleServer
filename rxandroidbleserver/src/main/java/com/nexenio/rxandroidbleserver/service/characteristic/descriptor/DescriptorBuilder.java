@@ -2,6 +2,9 @@ package com.nexenio.rxandroidbleserver.service.characteristic.descriptor;
 
 import android.bluetooth.BluetoothGattDescriptor;
 
+import com.nexenio.rxandroidbleserver.service.value.BaseValue;
+import com.nexenio.rxandroidbleserver.service.value.RxBleValue;
+
 import java.util.UUID;
 
 import androidx.annotation.NonNull;
@@ -14,7 +17,7 @@ public class DescriptorBuilder {
     private int permissions;
 
     @Nullable
-    private byte[] value;
+    private RxBleValue value;
 
     public DescriptorBuilder(@NonNull UUID uuid) {
         this.uuid = uuid;
@@ -22,13 +25,20 @@ public class DescriptorBuilder {
 
     public RxBleDescriptor build() {
         RxBleDescriptor descriptor = new BaseDescriptor(uuid, permissions);
+
         if (value != null) {
-            descriptor.getGattDescriptor().setValue(value);
+            descriptor.setValue(value);
         }
+        
         return descriptor;
     }
 
     public DescriptorBuilder withInitialValue(@NonNull byte[] value) {
+        this.value = new BaseValue(value);
+        return this;
+    }
+
+    public DescriptorBuilder withInitialValue(@NonNull RxBleValue value) {
         this.value = value;
         return this;
     }

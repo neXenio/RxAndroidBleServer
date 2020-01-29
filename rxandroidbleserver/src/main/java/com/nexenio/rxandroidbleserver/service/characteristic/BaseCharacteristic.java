@@ -21,18 +21,16 @@ import java.util.Set;
 import java.util.UUID;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import io.reactivex.Completable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 
 public class BaseCharacteristic implements RxBleCharacteristic {
 
+    protected RxBleValue value = new BaseValue();
+
     protected final Set<RxBleDescriptor> descriptors;
     protected final BluetoothGattCharacteristic gattCharacteristic;
-
-    @Nullable
-    protected RxBleValue value;
 
     public BaseCharacteristic(@NonNull UUID uuid, int properties, int permissions) {
         this.descriptors = new HashSet<>();
@@ -42,6 +40,7 @@ public class BaseCharacteristic implements RxBleCharacteristic {
     public BaseCharacteristic(@NonNull BluetoothGattCharacteristic gattCharacteristic) {
         this.descriptors = new HashSet<>();
         this.gattCharacteristic = gattCharacteristic;
+        updateValueFromCharacteristic().blockingAwait();
         // TODO: 1/26/2020 add descriptors if available
     }
 
@@ -128,19 +127,22 @@ public class BaseCharacteristic implements RxBleCharacteristic {
 
     private Completable updateValueFromCharacteristic() {
         return Completable.fromAction(() -> {
-            if (value == null) {
-                value = new BaseValue();
+            if (gattCharacteristic.getValue() != null) {
+                value.setBytes(gattCharacteristic.getValue());
             }
-            value.setBytes(gattCharacteristic.getValue());
         });
     }
 
     private Completable updateCharacteristicFromValue() {
-        return Completable.fromAction(() -> {
-            if (value != null) {
-                gattCharacteristic.setValue(value.getBytes());
-            }
-        });
+        return Completable.fromAction(() -> gattCharacteristic.setValue(value.getBytes()));
+    }
+
+    @Override
+    public String toString() {
+        return "BaseCharacteristic{" +
+                "value=" + value +
+                ", descriptors=" + descriptors +
+                '}';
     }
 
 }
