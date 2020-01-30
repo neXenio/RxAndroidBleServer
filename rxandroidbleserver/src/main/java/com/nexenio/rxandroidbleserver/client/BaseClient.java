@@ -23,7 +23,7 @@ public class BaseClient implements RxBleClient {
 
     @Override
     public boolean isDisconnected() {
-        return connectionState == BluetoothGatt.STATE_CONNECTED;
+        return connectionState == BluetoothGatt.STATE_DISCONNECTED;
     }
 
     @Override
