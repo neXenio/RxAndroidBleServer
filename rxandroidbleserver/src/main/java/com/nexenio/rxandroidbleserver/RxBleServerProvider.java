@@ -10,7 +10,7 @@ public class RxBleServerProvider {
     }
 
     public static RxBleServer createServer(@NonNull Context context) {
-        return new BaseBleServer(context);
+        return new BaseServer(context);
     }
 
 }

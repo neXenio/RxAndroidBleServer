@@ -50,7 +50,7 @@ import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 import timber.log.Timber;
 
-public class BaseBleServer implements RxBleServer, RxBleServerMapper {
+public class BaseServer implements RxBleServer, RxBleServerMapper {
 
     private static final long ADVERTISING_START_TIMEOUT = TimeUnit.SECONDS.toMillis(1);
 
@@ -72,7 +72,7 @@ public class BaseBleServer implements RxBleServer, RxBleServerMapper {
     private final PublishSubject<RxBleServerRequest> requestPublisher;
     private final PublishSubject<RxBleServerResponse> responsePublisher;
 
-    public BaseBleServer(Context context) {
+    public BaseServer(Context context) {
         this.context = context;
         services = new HashSet<>();
         clients = new HashSet<>();
