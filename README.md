@@ -18,7 +18,7 @@ allprojects {
 }
 
 dependencies {
-    implementation 'com.github.neXenio:RxKeyStore:master-SNAPSHOT'
+    implementation 'com.github.neXenio:RxAndroidBleServer:master-SNAPSHOT'
 }
 ```
 
