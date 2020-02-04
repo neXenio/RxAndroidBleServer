@@ -9,6 +9,7 @@ import com.nexenio.rxandroidbleserver.service.ServiceBuilder;
 import com.nexenio.rxandroidbleserver.service.characteristic.CharacteristicBuilder;
 import com.nexenio.rxandroidbleserver.service.characteristic.RxBleCharacteristic;
 import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.CharacteristicUserDescription;
+import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.ClientCharacteristicConfiguration;
 import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.DescriptorBuilder;
 import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.RxBleDescriptor;
 
@@ -46,6 +47,7 @@ public final class ExampleProfile {
                         .putInt(1337)
                         .array())
                 .withDescriptor(new CharacteristicUserDescription("Example"))
+                .withDescriptor(new ClientCharacteristicConfiguration())
                 .withDescriptor(createExampleDescriptor())
                 .allowRead()
                 .allowWrite()

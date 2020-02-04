@@ -3,12 +3,15 @@ package com.nexenio.rxandroidbleserver.service.characteristic;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 
+import com.nexenio.rxandroidbleserver.client.RxBleClient;
 import com.nexenio.rxandroidbleserver.exception.RxBleServerException;
 import com.nexenio.rxandroidbleserver.request.RxBleReadRequest;
 import com.nexenio.rxandroidbleserver.request.RxBleWriteRequest;
 import com.nexenio.rxandroidbleserver.request.characteristic.RxBleCharacteristicReadRequest;
 import com.nexenio.rxandroidbleserver.request.characteristic.RxBleCharacteristicWriteRequest;
 import com.nexenio.rxandroidbleserver.response.RxBleServerResponse;
+import com.nexenio.rxandroidbleserver.service.RxBleService;
+import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.ClientCharacteristicConfiguration;
 import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.RxBleDescriptor;
 import com.nexenio.rxandroidbleserver.service.value.BaseValue;
 import com.nexenio.rxandroidbleserver.service.value.BaseValueContainer;
@@ -22,10 +25,13 @@ import java.util.UUID;
 import androidx.annotation.NonNull;
 import io.reactivex.Completable;
 import io.reactivex.Maybe;
+import io.reactivex.Observable;
 import io.reactivex.Single;
+import timber.log.Timber;
 
 public class BaseCharacteristic extends BaseValueContainer implements RxBleCharacteristic {
 
+    protected RxBleService parentService;
     protected final Set<RxBleDescriptor> descriptors;
     protected final BluetoothGattCharacteristic gattCharacteristic;
 
@@ -62,7 +68,11 @@ public class BaseCharacteristic extends BaseValueContainer implements RxBleChara
             } else {
                 return Completable.error(new RxBleServerException("Unable to add GATT descriptor"));
             }
-        }).doOnComplete(() -> descriptors.add(descriptor));
+        }).doOnComplete(() -> {
+            descriptor.setParentCharacteristic(this);
+            descriptors.add(descriptor);
+            Timber.d("Added descriptor: %s", descriptor);
+        });
     }
 
     @Override
@@ -83,6 +93,50 @@ public class BaseCharacteristic extends BaseValueContainer implements RxBleChara
     @Override
     public Maybe<RxBleServerResponse> createWriteRequestResponse(@NonNull RxBleCharacteristicWriteRequest request) {
         return createWriteRequestResponse((RxBleWriteRequest) request);
+    }
+
+    @Override
+    public Completable setValue(@NonNull RxBleValue value) {
+        return super.setValue(value)
+                .andThen(notifyClientsIfEnabled());
+    }
+
+    @Override
+    public Completable setValue(@NonNull RxBleClient client, @NonNull RxBleValue value) {
+        return super.setValue(client, value)
+                .andThen(notifyClientIfEnabled(client));
+    }
+
+    @Override
+    public Completable notify(@NonNull RxBleClient client) {
+        return Completable.defer(() -> parentService.getParentServer().notify(client, this));
+    }
+
+    @Override
+    public RxBleService getParentService() {
+        return parentService;
+    }
+
+    @Override
+    public void setParentService(@NonNull RxBleService parentService) {
+        this.parentService = parentService;
+    }
+
+    protected Completable notifyClientsIfEnabled() {
+        return getClientCharacteristicNotification()
+                .flatMapCompletable(ClientCharacteristicConfiguration::notifyClientsIfEnabled);
+    }
+
+    protected Completable notifyClientIfEnabled(@NonNull RxBleClient client) {
+        return getClientCharacteristicNotification()
+                .flatMapCompletable(configuration -> configuration.notifyClientIfEnabled(client));
+    }
+
+    protected Maybe<ClientCharacteristicConfiguration> getClientCharacteristicNotification() {
+        return Observable.defer(() -> Observable.fromIterable(descriptors))
+                .filter(descriptor -> descriptor instanceof ClientCharacteristicConfiguration)
+                .cast(ClientCharacteristicConfiguration.class)
+                .firstElement();
     }
 
     @Override

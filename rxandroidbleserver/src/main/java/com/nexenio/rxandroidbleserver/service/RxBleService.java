@@ -2,6 +2,7 @@ package com.nexenio.rxandroidbleserver.service;
 
 import android.bluetooth.BluetoothGattService;
 
+import com.nexenio.rxandroidbleserver.RxBleServer;
 import com.nexenio.rxandroidbleserver.service.characteristic.RxBleCharacteristic;
 
 import java.util.Set;
@@ -19,5 +20,9 @@ public interface RxBleService {
     Set<RxBleCharacteristic> getCharacteristics();
 
     BluetoothGattService getGattService();
+
+    RxBleServer getParentServer();
+
+    void setParentServer(@NonNull RxBleServer parentServer);
 
 }

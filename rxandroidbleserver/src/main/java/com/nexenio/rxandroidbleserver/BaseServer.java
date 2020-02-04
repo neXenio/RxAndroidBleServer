@@ -217,6 +217,7 @@ public class BaseServer implements RxBleServer, RxBleServerMapper {
                 return Completable.complete();
             }
         }).doOnComplete(() -> {
+            service.setParentServer(this);
             services.add(service);
             Timber.d("Added service: %s", service);
         });
@@ -265,6 +266,17 @@ public class BaseServer implements RxBleServer, RxBleServerMapper {
     @Override
     public Completable disconnect(@NonNull RxBleClient client) {
         return Completable.error(new RxBleServerException("Not implemented"));
+    }
+
+    @Override
+    public Completable notify(@NonNull RxBleClient client, @NonNull RxBleCharacteristic characteristic) {
+        return getBluetoothGattServer()
+                .flatMapCompletable(gattServer -> Completable.fromAction(() -> {
+                    BluetoothDevice bluetoothDevice = client.getBluetoothDevice();
+                    BluetoothGattCharacteristic gattCharacteristic = characteristic.getGattCharacteristic();
+                    gattServer.notifyCharacteristicChanged(bluetoothDevice, gattCharacteristic, false);
+                    // TODO: 2020-02-04 wait for onNotificationSent callback
+                }));
     }
 
     @Override

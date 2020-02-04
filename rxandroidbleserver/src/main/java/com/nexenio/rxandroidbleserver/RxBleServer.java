@@ -2,6 +2,7 @@ package com.nexenio.rxandroidbleserver;
 
 import com.nexenio.rxandroidbleserver.client.RxBleClient;
 import com.nexenio.rxandroidbleserver.service.RxBleService;
+import com.nexenio.rxandroidbleserver.service.characteristic.RxBleCharacteristic;
 
 import java.util.Set;
 import java.util.UUID;
@@ -29,6 +30,8 @@ public interface RxBleServer {
     Completable connect(@NonNull RxBleClient client);
 
     Completable disconnect(@NonNull RxBleClient client);
+
+    Completable notify(@NonNull RxBleClient client, @NonNull RxBleCharacteristic characteristic);
 
     Observable<RxBleClient> observerClientConnectionStateChanges();
 
