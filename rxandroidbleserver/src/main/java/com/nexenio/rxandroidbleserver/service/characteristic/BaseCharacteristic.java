@@ -1,5 +1,6 @@
 package com.nexenio.rxandroidbleserver.service.characteristic;
 
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 
@@ -109,7 +110,12 @@ public class BaseCharacteristic extends BaseValueContainer implements RxBleChara
 
     @Override
     public Completable notify(@NonNull RxBleClient client) {
-        return Completable.defer(() -> parentService.getParentServer().notify(client, this));
+        return parentService.getParentServer().getGattServer()
+                .flatMapCompletable(gattServer -> Completable.fromAction(() -> {
+                    BluetoothDevice bluetoothDevice = client.getBluetoothDevice();
+                    gattServer.notifyCharacteristicChanged(bluetoothDevice, gattCharacteristic, false);
+                    // TODO: 2020-02-04 wait for onNotificationSent callback
+                }));
     }
 
     @Override

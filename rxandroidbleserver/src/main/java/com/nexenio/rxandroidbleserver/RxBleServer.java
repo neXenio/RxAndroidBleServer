@@ -1,8 +1,9 @@
 package com.nexenio.rxandroidbleserver;
 
+import android.bluetooth.BluetoothGattServer;
+
 import com.nexenio.rxandroidbleserver.client.RxBleClient;
 import com.nexenio.rxandroidbleserver.service.RxBleService;
-import com.nexenio.rxandroidbleserver.service.characteristic.RxBleCharacteristic;
 
 import java.util.Set;
 import java.util.UUID;
@@ -10,8 +11,11 @@ import java.util.UUID;
 import androidx.annotation.NonNull;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
+import io.reactivex.Single;
 
 public interface RxBleServer {
+
+    Single<BluetoothGattServer> getGattServer();
 
     Completable provideServices();
 
@@ -30,8 +34,6 @@ public interface RxBleServer {
     Completable connect(@NonNull RxBleClient client);
 
     Completable disconnect(@NonNull RxBleClient client);
-
-    Completable notify(@NonNull RxBleClient client, @NonNull RxBleCharacteristic characteristic);
 
     Observable<RxBleClient> observerClientConnectionStateChanges();
 
