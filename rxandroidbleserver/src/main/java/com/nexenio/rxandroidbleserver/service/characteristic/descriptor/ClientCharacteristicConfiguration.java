@@ -98,7 +98,11 @@ public class ClientCharacteristicConfiguration extends BaseDescriptor {
     }
 
     public Completable notifyClient(@NonNull RxBleClient client) {
-        return Completable.defer(() -> parentCharacteristic.notifyClient(client));
+        return Completable.defer(() -> parentCharacteristic.sendNotification(client));
+    }
+
+    public Completable indicateClient(@NonNull RxBleClient client) {
+        return Completable.defer(() -> parentCharacteristic.sendIndication(client));
     }
 
 }

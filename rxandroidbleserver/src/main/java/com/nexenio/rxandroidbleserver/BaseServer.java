@@ -276,6 +276,11 @@ public class BaseServer implements RxBleServer, RxBleServerMapper {
     }
 
     @Override
+    public Observable<RxBleClient> observerClientNotifications() {
+        return clientNotifiedPublisher;
+    }
+
+    @Override
     public Single<RxBleClient> getClient(@NonNull BluetoothDevice bluetoothDevice) {
         return Observable.defer(() -> Observable.fromIterable(getClients()))
                 .filter(client -> client.getBluetoothDevice().equals(bluetoothDevice))

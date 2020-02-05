@@ -37,4 +37,6 @@ public interface RxBleServer {
 
     Observable<RxBleClient> observerClientConnectionStateChanges();
 
+    Observable<RxBleClient> observerClientNotifications();
+
 }

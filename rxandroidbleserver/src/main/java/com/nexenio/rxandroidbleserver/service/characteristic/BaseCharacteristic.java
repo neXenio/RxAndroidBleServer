@@ -22,12 +22,15 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import io.reactivex.Completable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import timber.log.Timber;
 
 public class BaseCharacteristic extends BaseValueContainer implements RxBleCharacteristic {
@@ -107,18 +110,44 @@ public class BaseCharacteristic extends BaseValueContainer implements RxBleChara
     }
 
     @Override
-    public Completable notifyClients() {
+    public Completable sendNotifications() {
         return getClientCharacteristicNotification()
                 .flatMapCompletable(ClientCharacteristicConfiguration::notifyClientsIfEnabled);
     }
 
     @Override
-    public Completable notifyClient(@NonNull RxBleClient client) {
+    public Completable sendNotification(@NonNull RxBleClient client) {
         return parentService.getParentServer().getGattServer()
                 .flatMapCompletable(gattServer -> Completable.fromAction(() -> {
                     BluetoothDevice bluetoothDevice = client.getBluetoothDevice();
                     gattServer.notifyCharacteristicChanged(bluetoothDevice, gattCharacteristic, false);
-                    // TODO: 2020-02-04 wait for onNotificationSent callback
+                }));
+    }
+
+    @Override
+    public Completable sendIndication(@NonNull RxBleClient client) {
+        return parentService.getParentServer().getGattServer()
+                .flatMapCompletable(gattServer -> Completable.create(emitter -> {
+                    Disposable waitForConfirmation = parentService.getParentServer()
+                            .observerClientNotifications()
+                            .filter(notifiedClient -> notifiedClient.equals(client))
+                            .firstOrError()
+                            .timeout(1, TimeUnit.SECONDS)
+                            .ignoreElement()
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(
+                                    () -> {
+                                        if (!emitter.isDisposed()) {
+                                            emitter.onComplete();
+                                        }
+                                    },
+                                    emitter::tryOnError
+                            );
+
+                    BluetoothDevice bluetoothDevice = client.getBluetoothDevice();
+                    gattServer.notifyCharacteristicChanged(bluetoothDevice, gattCharacteristic, true);
+
+                    emitter.setDisposable(waitForConfirmation);
                 }));
     }
 
