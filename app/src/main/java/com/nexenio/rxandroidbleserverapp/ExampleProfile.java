@@ -12,11 +12,16 @@ import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.Characte
 import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.ClientCharacteristicConfiguration;
 import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.DescriptorBuilder;
 import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.RxBleDescriptor;
+import com.nexenio.rxandroidbleserver.service.value.BaseValue;
+import com.nexenio.rxandroidbleserver.service.value.RxBleValue;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
+import io.reactivex.Completable;
+import io.reactivex.Observable;
 
 public final class ExampleProfile {
 
@@ -24,28 +29,57 @@ public final class ExampleProfile {
     public static final UUID EXAMPLE_CHARACTERISTIC_UUID = UUID.fromString("aa4cd9de-087c-4951-bb92-4ea1cc8fd7d6");
     public static final UUID EXAMPLE_DESCRIPTOR_UUID = UUID.fromString("c8976395-2170-46c1-be55-b46d31dcb61c");
 
-    private ExampleProfile() {
+    private RxBleServer exampleServer;
+    private RxBleService exampleService;
+    private RxBleCharacteristic exampleCharacteristic;
+    private RxBleDescriptor exampleDescriptor;
 
+    public ExampleProfile(@NonNull Context context) {
+        createExampleServer(context);
     }
 
-    public static RxBleServer createExampleServer(@NonNull Context context) {
-        RxBleServer server = RxBleServerProvider.createServer(context);
-        server.addService(createExampleService()).blockingAwait();
-        return server;
+    public Completable updateCharacteristicValues() {
+        return Observable.interval(1, TimeUnit.SECONDS)
+                .map(count -> (int) (count % 1337))
+                .map(this::createExampleValue)
+                .flatMapCompletable(value -> exampleCharacteristic.setValue(value)
+                        .andThen(exampleCharacteristic.sendNotifications()));
     }
 
-    private static RxBleService createExampleService() {
-        return new ServiceBuilder(EXAMPLE_SERVICE_UUID)
+    public RxBleServer getExampleServer() {
+        return exampleServer;
+    }
+
+    public RxBleService getExampleService() {
+        return exampleService;
+    }
+
+    public RxBleCharacteristic getExampleCharacteristic() {
+        return exampleCharacteristic;
+    }
+
+    public RxBleDescriptor getExampleDescriptor() {
+        return exampleDescriptor;
+    }
+
+    private RxBleServer createExampleServer(@NonNull Context context) {
+        exampleServer = RxBleServerProvider.createServer(context);
+        exampleServer.addService(createExampleService()).blockingAwait();
+        return exampleServer;
+    }
+
+    private RxBleService createExampleService() {
+        exampleService = new ServiceBuilder(EXAMPLE_SERVICE_UUID)
                 .withCharacteristic(createExampleCharacteristic())
                 .isPrimaryService()
                 .build();
+
+        return exampleService;
     }
 
-    private static RxBleCharacteristic createExampleCharacteristic() {
-        return new CharacteristicBuilder(EXAMPLE_CHARACTERISTIC_UUID)
-                .withInitialValue(ByteBuffer.allocate(4)
-                        .putInt(1337)
-                        .array())
+    private RxBleCharacteristic createExampleCharacteristic() {
+        exampleCharacteristic = new CharacteristicBuilder(EXAMPLE_CHARACTERISTIC_UUID)
+                .withInitialValue(createExampleValue(0))
                 .withDescriptor(new CharacteristicUserDescription("Example"))
                 .withDescriptor(new ClientCharacteristicConfiguration())
                 .withDescriptor(createExampleDescriptor())
@@ -54,16 +88,24 @@ public final class ExampleProfile {
                 .supportWritesWithoutResponse()
                 .supportNotifications()
                 .build();
+
+        return exampleCharacteristic;
     }
 
-    private static RxBleDescriptor createExampleDescriptor() {
-        return new DescriptorBuilder(EXAMPLE_DESCRIPTOR_UUID)
-                .withInitialValue(ByteBuffer.allocate(4)
-                        .putInt(42)
-                        .array())
+    private RxBleDescriptor createExampleDescriptor() {
+        exampleDescriptor = new DescriptorBuilder(EXAMPLE_DESCRIPTOR_UUID)
+                .withInitialValue(createExampleValue(1337))
                 .allowRead()
                 .allowWrite()
                 .build();
+
+        return exampleDescriptor;
+    }
+
+    private RxBleValue createExampleValue(int number) {
+        ByteBuffer buffer = ByteBuffer.allocate(4);
+        buffer.putInt(number);
+        return new BaseValue(buffer.array());
     }
 
 }

@@ -117,38 +117,42 @@ public class BaseCharacteristic extends BaseValueContainer implements RxBleChara
 
     @Override
     public Completable sendNotification(@NonNull RxBleClient client) {
-        return parentService.getParentServer().getGattServer()
-                .flatMapCompletable(gattServer -> Completable.fromAction(() -> {
-                    BluetoothDevice bluetoothDevice = client.getBluetoothDevice();
-                    gattServer.notifyCharacteristicChanged(bluetoothDevice, gattCharacteristic, false);
-                }));
+        return updateCharacteristicValue(client)
+                .andThen(parentService.getParentServer().getGattServer()
+                        .flatMapCompletable(gattServer -> Completable.fromAction(() -> {
+                            BluetoothDevice bluetoothDevice = client.getBluetoothDevice();
+                            gattServer.notifyCharacteristicChanged(bluetoothDevice, gattCharacteristic, false);
+                        }))
+                        .doOnComplete(() -> Timber.v("Sent notification to %s", client)));
     }
 
     @Override
     public Completable sendIndication(@NonNull RxBleClient client) {
-        return parentService.getParentServer().getGattServer()
-                .flatMapCompletable(gattServer -> Completable.create(emitter -> {
-                    Disposable waitForConfirmation = parentService.getParentServer()
-                            .observerClientNotifications()
-                            .filter(notifiedClient -> notifiedClient.equals(client))
-                            .firstOrError()
-                            .timeout(1, TimeUnit.SECONDS)
-                            .ignoreElement()
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(
-                                    () -> {
-                                        if (!emitter.isDisposed()) {
-                                            emitter.onComplete();
-                                        }
-                                    },
-                                    emitter::tryOnError
-                            );
+        return updateCharacteristicValue(client)
+                .andThen(parentService.getParentServer().getGattServer()
+                        .flatMapCompletable(gattServer -> Completable.create(emitter -> {
+                            Disposable waitForConfirmation = parentService.getParentServer()
+                                    .observerClientNotifications()
+                                    .filter(notifiedClient -> notifiedClient.equals(client))
+                                    .firstOrError()
+                                    .timeout(1, TimeUnit.SECONDS)
+                                    .ignoreElement()
+                                    .subscribeOn(Schedulers.io())
+                                    .subscribe(
+                                            () -> {
+                                                if (!emitter.isDisposed()) {
+                                                    emitter.onComplete();
+                                                }
+                                            },
+                                            emitter::tryOnError
+                                    );
 
-                    BluetoothDevice bluetoothDevice = client.getBluetoothDevice();
-                    gattServer.notifyCharacteristicChanged(bluetoothDevice, gattCharacteristic, true);
+                            BluetoothDevice bluetoothDevice = client.getBluetoothDevice();
+                            gattServer.notifyCharacteristicChanged(bluetoothDevice, gattCharacteristic, true);
 
-                    emitter.setDisposable(waitForConfirmation);
-                }));
+                            emitter.setDisposable(waitForConfirmation);
+                        }))
+                        .doOnComplete(() -> Timber.v("Sent indication to %s", client)));
     }
 
     @Override
@@ -169,6 +173,18 @@ public class BaseCharacteristic extends BaseValueContainer implements RxBleChara
     @Override
     public boolean hasPermission(int permission) {
         return (gattCharacteristic.getPermissions() & permission) == permission;
+    }
+
+    private Completable updateCharacteristicValue(@NonNull RxBleClient client) {
+        return Single.defer(() -> {
+            if (shareValues) {
+                return sharedValueProvider.getValue();
+            } else {
+                return clientValueProvider.getValue(client);
+            }
+        }).flatMapCompletable(value -> Completable.fromAction(
+                () -> gattCharacteristic.setValue(value.getBytes())
+        ));
     }
 
     protected Maybe<ClientCharacteristicConfiguration> getClientCharacteristicNotification() {

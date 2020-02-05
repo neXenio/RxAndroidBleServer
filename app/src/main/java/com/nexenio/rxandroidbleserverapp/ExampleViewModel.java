@@ -1,7 +1,6 @@
 package com.nexenio.rxandroidbleserverapp;
 
 import android.app.Application;
-import android.util.Log;
 
 import com.nexenio.rxandroidbleserver.RxBleServer;
 
@@ -15,13 +14,13 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import timber.log.Timber;
 
 public class ExampleViewModel extends AndroidViewModel {
 
-    private final String TAG = ExampleViewModel.class.getSimpleName();
-
     private final CompositeDisposable viewModelDisposable = new CompositeDisposable();
 
+    private final ExampleProfile exampleProfile;
     private RxBleServer bleServer;
     private Disposable provideServicesDisposable;
     private Disposable advertiseServicesDisposable;
@@ -33,7 +32,15 @@ public class ExampleViewModel extends AndroidViewModel {
     public ExampleViewModel(@NonNull Application application) {
         super(application);
 
-        bleServer = ExampleProfile.createExampleServer(application);
+        exampleProfile = new ExampleProfile(application);
+        bleServer = exampleProfile.getExampleServer();
+        viewModelDisposable.add(exampleProfile.updateCharacteristicValues()
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        () -> Timber.d("Done updating characteristic values"),
+                        this::postError
+                ));
+
         isProvidingServices.setValue(false);
         isAdvertisingService.setValue(false);
     }
@@ -61,14 +68,14 @@ public class ExampleViewModel extends AndroidViewModel {
     }
 
     private void startProvidingServices() {
-        Log.d(TAG, "Starting to provide services");
+        Timber.d("Starting to provide services");
         provideServicesDisposable = bleServer.provideServices()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe(disposable -> isProvidingServices.postValue(true))
                 .doFinally(() -> isProvidingServices.postValue(false))
                 .subscribe(
-                        () -> Log.i(TAG, "Stopped providing services"),
+                        () -> Timber.i("Stopped providing services"),
                         this::postError
                 );
 
@@ -76,7 +83,7 @@ public class ExampleViewModel extends AndroidViewModel {
     }
 
     private void stopProvidingServices() {
-        Log.d(TAG, "Stopping to provide services");
+        Timber.d("Stopping to provide services");
         if (provideServicesDisposable != null && !provideServicesDisposable.isDisposed()) {
             provideServicesDisposable.dispose();
         }
@@ -99,7 +106,7 @@ public class ExampleViewModel extends AndroidViewModel {
     }
 
     private void startAdvertisingServices() {
-        Log.d(TAG, "Starting to advertise services");
+        Timber.d("Starting to advertise services");
         UUID uuid = ExampleProfile.EXAMPLE_SERVICE_UUID;
         advertiseServicesDisposable = bleServer.advertise(uuid)
                 .subscribeOn(Schedulers.io())
@@ -107,7 +114,7 @@ public class ExampleViewModel extends AndroidViewModel {
                 .doOnSubscribe(disposable -> isAdvertisingService.postValue(true))
                 .doFinally(() -> isAdvertisingService.postValue(false))
                 .subscribe(
-                        () -> Log.i(TAG, "Stopped advertising services"),
+                        () -> Timber.i("Stopped advertising services"),
                         this::postError
                 );
 
@@ -115,7 +122,7 @@ public class ExampleViewModel extends AndroidViewModel {
     }
 
     private void stopAdvertisingServices() {
-        Log.d(TAG, "Stopping to advertise services");
+        Timber.d("Stopping to advertise services");
         if (advertiseServicesDisposable != null && !advertiseServicesDisposable.isDisposed()) {
             advertiseServicesDisposable.dispose();
         }
@@ -126,7 +133,7 @@ public class ExampleViewModel extends AndroidViewModel {
      */
 
     private void postError(@NonNull Throwable throwable) {
-        Log.w(TAG, throwable);
+        Timber.w(throwable);
         errors.postValue(throwable);
     }
 

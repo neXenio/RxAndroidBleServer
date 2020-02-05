@@ -83,7 +83,7 @@ public class ClientCharacteristicConfiguration extends BaseDescriptor {
         return Observable.defer(() -> Observable.fromIterable(clientsWithNotificationsEnabled))
                 .filter(RxBleClient::isConnected)
                 .flatMapCompletable(client -> notifyClient(client)
-                        .doOnError(throwable -> Timber.w("Unable to notify client: %s", client))
+                        .doOnError(throwable -> Timber.w(throwable, "Unable to notify client: %s", client))
                         .onErrorComplete());
     }
 
