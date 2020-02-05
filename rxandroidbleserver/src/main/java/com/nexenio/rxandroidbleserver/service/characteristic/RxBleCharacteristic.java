@@ -38,4 +38,8 @@ public interface RxBleCharacteristic extends RxBleValueContainer {
 
     void setParentService(@NonNull RxBleService parentService);
 
+    boolean hasProperty(int property);
+
+    boolean hasPermission(int permission);
+
 }

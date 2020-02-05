@@ -28,4 +28,6 @@ public interface RxBleDescriptor extends RxBleValueContainer {
 
     void setParentCharacteristic(@NonNull RxBleCharacteristic parentCharacteristic);
 
+    boolean hasPermission(int permission);
+
 }

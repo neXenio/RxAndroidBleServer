@@ -70,6 +70,11 @@ public class BaseDescriptor extends BaseValueContainer implements RxBleDescripto
     }
 
     @Override
+    public boolean hasPermission(int permission) {
+        return (gattDescriptor.getPermissions() & permission) == permission;
+    }
+
+    @Override
     public String toString() {
         return "BaseDescriptor{" +
                 "uuid=" + gattDescriptor.getUuid() +

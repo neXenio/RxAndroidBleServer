@@ -122,6 +122,16 @@ public class BaseCharacteristic extends BaseValueContainer implements RxBleChara
         this.parentService = parentService;
     }
 
+    @Override
+    public boolean hasProperty(int property) {
+        return (gattCharacteristic.getProperties() & property) == property;
+    }
+
+    @Override
+    public boolean hasPermission(int permission) {
+        return (gattCharacteristic.getPermissions() & permission) == permission;
+    }
+
     protected Completable notifyClientsIfEnabled() {
         return getClientCharacteristicNotification()
                 .flatMapCompletable(ClientCharacteristicConfiguration::notifyClientsIfEnabled);
