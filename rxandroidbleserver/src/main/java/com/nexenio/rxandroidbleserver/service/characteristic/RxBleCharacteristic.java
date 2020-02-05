@@ -32,7 +32,9 @@ public interface RxBleCharacteristic extends RxBleValueContainer {
 
     Maybe<RxBleServerResponse> createWriteRequestResponse(@NonNull RxBleCharacteristicWriteRequest request);
 
-    Completable notify(@NonNull RxBleClient client);
+    Completable notifyClients();
+
+    Completable notifyClient(@NonNull RxBleClient client);
 
     RxBleService getParentService();
 

@@ -98,18 +98,22 @@ public class BaseCharacteristic extends BaseValueContainer implements RxBleChara
 
     @Override
     public Completable setValue(@NonNull RxBleValue value) {
-        return super.setValue(value)
-                .andThen(notifyClientsIfEnabled());
+        return super.setValue(value);
     }
 
     @Override
     public Completable setValue(@NonNull RxBleClient client, @NonNull RxBleValue value) {
-        return super.setValue(client, value)
-                .andThen(notifyClientIfEnabled(client));
+        return super.setValue(client, value);
     }
 
     @Override
-    public Completable notify(@NonNull RxBleClient client) {
+    public Completable notifyClients() {
+        return getClientCharacteristicNotification()
+                .flatMapCompletable(ClientCharacteristicConfiguration::notifyClientsIfEnabled);
+    }
+
+    @Override
+    public Completable notifyClient(@NonNull RxBleClient client) {
         return parentService.getParentServer().getGattServer()
                 .flatMapCompletable(gattServer -> Completable.fromAction(() -> {
                     BluetoothDevice bluetoothDevice = client.getBluetoothDevice();
@@ -136,16 +140,6 @@ public class BaseCharacteristic extends BaseValueContainer implements RxBleChara
     @Override
     public boolean hasPermission(int permission) {
         return (gattCharacteristic.getPermissions() & permission) == permission;
-    }
-
-    protected Completable notifyClientsIfEnabled() {
-        return getClientCharacteristicNotification()
-                .flatMapCompletable(ClientCharacteristicConfiguration::notifyClientsIfEnabled);
-    }
-
-    protected Completable notifyClientIfEnabled(@NonNull RxBleClient client) {
-        return getClientCharacteristicNotification()
-                .flatMapCompletable(configuration -> configuration.notifyClientIfEnabled(client));
     }
 
     protected Maybe<ClientCharacteristicConfiguration> getClientCharacteristicNotification() {

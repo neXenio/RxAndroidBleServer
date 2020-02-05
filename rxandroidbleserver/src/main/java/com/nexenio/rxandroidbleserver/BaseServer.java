@@ -71,6 +71,7 @@ public class BaseServer implements RxBleServer, RxBleServerMapper {
     private final PublishSubject<RxBleClient> clientPublisher;
     private final PublishSubject<RxBleServerRequest> requestPublisher;
     private final PublishSubject<RxBleServerResponse> responsePublisher;
+    private final PublishSubject<RxBleClient> clientNotifiedPublisher;
 
     public BaseServer(Context context) {
         this.context = context;
@@ -79,6 +80,7 @@ public class BaseServer implements RxBleServer, RxBleServerMapper {
         clientPublisher = PublishSubject.create();
         requestPublisher = PublishSubject.create();
         responsePublisher = PublishSubject.create();
+        clientNotifiedPublisher = PublishSubject.create();
 
         requestPublisher.flatMapMaybe(this::createResponse)
                 .subscribe(responsePublisher);
@@ -382,6 +384,7 @@ public class BaseServer implements RxBleServer, RxBleServerMapper {
             callback.getCharacteristicWriteRequestPublisher().subscribe(requestPublisher);
             callback.getDescriptorReadRequestPublisher().subscribe(requestPublisher);
             callback.getDescriptorWriteRequestPublisher().subscribe(requestPublisher);
+            callback.getClientNotifiedPublisher().subscribe(clientNotifiedPublisher);
         });
     }
 

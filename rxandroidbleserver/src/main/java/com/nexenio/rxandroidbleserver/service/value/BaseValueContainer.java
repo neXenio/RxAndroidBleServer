@@ -82,7 +82,11 @@ public class BaseValueContainer implements RxBleValueContainer {
     public Maybe<RxBleServerResponse> createWriteRequestResponse(@NonNull RxBleWriteRequest request) {
         Completable writeValue = Completable.defer(() -> {
             if (request.getOffset() == 0) {
-                return setValue(request.getClient(), request.getValue());
+                if (shareValues) {
+                    return setValue(request.getValue());
+                } else {
+                    return setValue(request.getClient(), request.getValue());
+                }
             } else {
                 // TODO: 1/26/2020 implement long writes support
                 return Completable.error(new RxBleServerException("Long writes are not yet supported"));
