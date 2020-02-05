@@ -24,6 +24,7 @@ public class ExampleViewModel extends AndroidViewModel {
     private RxBleServer bleServer;
     private Disposable provideServicesDisposable;
     private Disposable advertiseServicesDisposable;
+    private Disposable updateValueDisposable;
 
     private MutableLiveData<Boolean> isProvidingServices = new MutableLiveData<>();
     private MutableLiveData<Boolean> isAdvertisingService = new MutableLiveData<>();
@@ -34,12 +35,6 @@ public class ExampleViewModel extends AndroidViewModel {
 
         exampleProfile = new ExampleProfile(application);
         bleServer = exampleProfile.getExampleServer();
-        viewModelDisposable.add(exampleProfile.updateCharacteristicValues()
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                        () -> Timber.d("Done updating characteristic values"),
-                        this::postError
-                ));
 
         isProvidingServices.setValue(false);
         isAdvertisingService.setValue(false);
@@ -79,13 +74,24 @@ public class ExampleViewModel extends AndroidViewModel {
                         this::postError
                 );
 
+        updateValueDisposable = exampleProfile.updateCharacteristicValues()
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        () -> Timber.d("Done updating characteristic values"),
+                        this::postError
+                );
+
         viewModelDisposable.add(provideServicesDisposable);
+        viewModelDisposable.add(updateValueDisposable);
     }
 
     private void stopProvidingServices() {
         Timber.d("Stopping to provide services");
         if (provideServicesDisposable != null && !provideServicesDisposable.isDisposed()) {
             provideServicesDisposable.dispose();
+        }
+        if (updateValueDisposable != null && !updateValueDisposable.isDisposed()) {
+            updateValueDisposable.dispose();
         }
     }
 
