@@ -25,4 +25,6 @@ public interface RxBleServerCallback {
 
     PublishSubject<RxBleDescriptorWriteRequest> getDescriptorWriteRequestPublisher();
 
+    PublishSubject<RxBleClient> getClientNotifiedPublisher();
+
 }

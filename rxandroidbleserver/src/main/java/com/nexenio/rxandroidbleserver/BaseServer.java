@@ -71,6 +71,7 @@ public class BaseServer implements RxBleServer, RxBleServerMapper {
     private final PublishSubject<RxBleClient> clientPublisher;
     private final PublishSubject<RxBleServerRequest> requestPublisher;
     private final PublishSubject<RxBleServerResponse> responsePublisher;
+    private final PublishSubject<RxBleClient> clientNotifiedPublisher;
 
     public BaseServer(Context context) {
         this.context = context;
@@ -79,6 +80,7 @@ public class BaseServer implements RxBleServer, RxBleServerMapper {
         clientPublisher = PublishSubject.create();
         requestPublisher = PublishSubject.create();
         responsePublisher = PublishSubject.create();
+        clientNotifiedPublisher = PublishSubject.create();
 
         requestPublisher.flatMapMaybe(this::createResponse)
                 .subscribe(responsePublisher);
@@ -199,7 +201,7 @@ public class BaseServer implements RxBleServer, RxBleServerMapper {
 
     @Override
     public Completable addService(@NonNull RxBleService service) {
-        Completable modifyGattServer = getBluetoothGattServer()
+        Completable modifyGattServer = getGattServer()
                 .flatMapCompletable(bluetoothGattServer -> Completable.defer(() -> {
                     BluetoothGattService bluetoothGattService = service.getGattService();
                     boolean success = bluetoothGattServer.addService(bluetoothGattService);
@@ -217,6 +219,7 @@ public class BaseServer implements RxBleServer, RxBleServerMapper {
                 return Completable.complete();
             }
         }).doOnComplete(() -> {
+            service.setParentServer(this);
             services.add(service);
             Timber.d("Added service: %s", service);
         });
@@ -224,7 +227,7 @@ public class BaseServer implements RxBleServer, RxBleServerMapper {
 
     @Override
     public Completable removeService(@NonNull RxBleService service) {
-        Completable modifyGattServer = getBluetoothGattServer()
+        Completable modifyGattServer = getGattServer()
                 .flatMapCompletable(bluetoothGattServer -> Completable.defer(() -> {
                     BluetoothGattService bluetoothGattService = service.getGattService();
                     boolean success = bluetoothGattServer.removeService(bluetoothGattService);
@@ -273,6 +276,11 @@ public class BaseServer implements RxBleServer, RxBleServerMapper {
     }
 
     @Override
+    public Observable<RxBleClient> observerClientNotifications() {
+        return clientNotifiedPublisher;
+    }
+
+    @Override
     public Single<RxBleClient> getClient(@NonNull BluetoothDevice bluetoothDevice) {
         return Observable.defer(() -> Observable.fromIterable(getClients()))
                 .filter(client -> client.getBluetoothDevice().equals(bluetoothDevice))
@@ -312,6 +320,18 @@ public class BaseServer implements RxBleServer, RxBleServerMapper {
                 .firstOrError();
     }
 
+    @Override
+    public Single<BluetoothGattServer> getGattServer() {
+        return Single.defer(() -> {
+            if (bluetoothGattServer != null) {
+                return Single.just(bluetoothGattServer);
+            } else {
+                return Single.error(new IllegalStateException("GATT server not available. " +
+                        "Make sure you have an active subscription to 'provideServices()'"));
+            }
+        });
+    }
+
     private Single<BluetoothManager> getBluetoothManager() {
         return Single.defer(() -> {
             BluetoothManager manager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
@@ -319,17 +339,6 @@ public class BaseServer implements RxBleServer, RxBleServerMapper {
                 return Single.just(manager);
             } else {
                 return Single.error(new BluetoothNotAvailableException("Bluetooth system service not available"));
-            }
-        });
-    }
-
-    private Single<BluetoothGattServer> getBluetoothGattServer() {
-        return Single.defer(() -> {
-            if (bluetoothGattServer != null) {
-                return Single.just(bluetoothGattServer);
-            } else {
-                return Single.error(new IllegalStateException("GATT server not available. " +
-                        "Make sure you have an active subscription to 'provideServices()'"));
             }
         });
     }
@@ -380,6 +389,7 @@ public class BaseServer implements RxBleServer, RxBleServerMapper {
             callback.getCharacteristicWriteRequestPublisher().subscribe(requestPublisher);
             callback.getDescriptorReadRequestPublisher().subscribe(requestPublisher);
             callback.getDescriptorWriteRequestPublisher().subscribe(requestPublisher);
+            callback.getClientNotifiedPublisher().subscribe(clientNotifiedPublisher);
         });
     }
 

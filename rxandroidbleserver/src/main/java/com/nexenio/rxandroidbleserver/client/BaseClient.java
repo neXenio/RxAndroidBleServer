@@ -3,6 +3,10 @@ package com.nexenio.rxandroidbleserver.client;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 
+import java.util.Objects;
+
+import androidx.annotation.NonNull;
+
 public class BaseClient implements RxBleClient {
 
     private static final int CONNECTION_STATE_UNKNOWN = -1;
@@ -11,7 +15,7 @@ public class BaseClient implements RxBleClient {
 
     protected int connectionState;
 
-    public BaseClient(BluetoothDevice bluetoothDevice) {
+    public BaseClient(@NonNull BluetoothDevice bluetoothDevice) {
         this.bluetoothDevice = bluetoothDevice;
         this.connectionState = CONNECTION_STATE_UNKNOWN;
     }
@@ -42,6 +46,23 @@ public class BaseClient implements RxBleClient {
                 "bluetoothDevice=" + bluetoothDevice +
                 ", connectionState=" + getReadableConnectionState(connectionState) +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        BaseClient client = (BaseClient) o;
+        return bluetoothDevice.equals(client.bluetoothDevice);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(bluetoothDevice);
     }
 
     public static String getReadableConnectionState(int state) {

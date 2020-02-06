@@ -1,14 +1,18 @@
 package com.nexenio.rxandroidbleserver.service.characteristic;
 
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 
+import com.nexenio.rxandroidbleserver.client.RxBleClient;
 import com.nexenio.rxandroidbleserver.exception.RxBleServerException;
 import com.nexenio.rxandroidbleserver.request.RxBleReadRequest;
 import com.nexenio.rxandroidbleserver.request.RxBleWriteRequest;
 import com.nexenio.rxandroidbleserver.request.characteristic.RxBleCharacteristicReadRequest;
 import com.nexenio.rxandroidbleserver.request.characteristic.RxBleCharacteristicWriteRequest;
 import com.nexenio.rxandroidbleserver.response.RxBleServerResponse;
+import com.nexenio.rxandroidbleserver.service.RxBleService;
+import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.ClientCharacteristicConfiguration;
 import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.RxBleDescriptor;
 import com.nexenio.rxandroidbleserver.service.value.BaseValue;
 import com.nexenio.rxandroidbleserver.service.value.BaseValueContainer;
@@ -18,14 +22,20 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import io.reactivex.Completable;
 import io.reactivex.Maybe;
+import io.reactivex.Observable;
 import io.reactivex.Single;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
+import timber.log.Timber;
 
 public class BaseCharacteristic extends BaseValueContainer implements RxBleCharacteristic {
 
+    protected RxBleService parentService;
     protected final Set<RxBleDescriptor> descriptors;
     protected final BluetoothGattCharacteristic gattCharacteristic;
 
@@ -62,7 +72,11 @@ public class BaseCharacteristic extends BaseValueContainer implements RxBleChara
             } else {
                 return Completable.error(new RxBleServerException("Unable to add GATT descriptor"));
             }
-        }).doOnComplete(() -> descriptors.add(descriptor));
+        }).doOnComplete(() -> {
+            descriptor.setParentCharacteristic(this);
+            descriptors.add(descriptor);
+            Timber.d("Added descriptor: %s", descriptor);
+        });
     }
 
     @Override
@@ -83,6 +97,101 @@ public class BaseCharacteristic extends BaseValueContainer implements RxBleChara
     @Override
     public Maybe<RxBleServerResponse> createWriteRequestResponse(@NonNull RxBleCharacteristicWriteRequest request) {
         return createWriteRequestResponse((RxBleWriteRequest) request);
+    }
+
+    @Override
+    public Completable setValue(@NonNull RxBleValue value) {
+        return super.setValue(value);
+    }
+
+    @Override
+    public Completable setValue(@NonNull RxBleClient client, @NonNull RxBleValue value) {
+        return super.setValue(client, value);
+    }
+
+    @Override
+    public Completable sendNotifications() {
+        return getClientCharacteristicNotification()
+                .flatMapCompletable(ClientCharacteristicConfiguration::notifyClientsIfEnabled);
+    }
+
+    @Override
+    public Completable sendNotification(@NonNull RxBleClient client) {
+        return updateCharacteristicValue(client)
+                .andThen(parentService.getParentServer().getGattServer()
+                        .flatMapCompletable(gattServer -> Completable.fromAction(() -> {
+                            BluetoothDevice bluetoothDevice = client.getBluetoothDevice();
+                            gattServer.notifyCharacteristicChanged(bluetoothDevice, gattCharacteristic, false);
+                        }))
+                        .doOnComplete(() -> Timber.v("Sent notification to %s", client)));
+    }
+
+    @Override
+    public Completable sendIndication(@NonNull RxBleClient client) {
+        return updateCharacteristicValue(client)
+                .andThen(parentService.getParentServer().getGattServer()
+                        .flatMapCompletable(gattServer -> Completable.create(emitter -> {
+                            Disposable waitForConfirmation = parentService.getParentServer()
+                                    .observerClientNotifications()
+                                    .filter(notifiedClient -> notifiedClient.equals(client))
+                                    .firstOrError()
+                                    .timeout(1, TimeUnit.SECONDS)
+                                    .ignoreElement()
+                                    .subscribeOn(Schedulers.io())
+                                    .subscribe(
+                                            () -> {
+                                                if (!emitter.isDisposed()) {
+                                                    emitter.onComplete();
+                                                }
+                                            },
+                                            emitter::tryOnError
+                                    );
+
+                            BluetoothDevice bluetoothDevice = client.getBluetoothDevice();
+                            gattServer.notifyCharacteristicChanged(bluetoothDevice, gattCharacteristic, true);
+
+                            emitter.setDisposable(waitForConfirmation);
+                        }))
+                        .doOnComplete(() -> Timber.v("Sent indication to %s", client)));
+    }
+
+    @Override
+    public RxBleService getParentService() {
+        return parentService;
+    }
+
+    @Override
+    public void setParentService(@NonNull RxBleService parentService) {
+        this.parentService = parentService;
+    }
+
+    @Override
+    public boolean hasProperty(int property) {
+        return (gattCharacteristic.getProperties() & property) == property;
+    }
+
+    @Override
+    public boolean hasPermission(int permission) {
+        return (gattCharacteristic.getPermissions() & permission) == permission;
+    }
+
+    private Completable updateCharacteristicValue(@NonNull RxBleClient client) {
+        return Single.defer(() -> {
+            if (shareValues) {
+                return sharedValueProvider.getValue();
+            } else {
+                return clientValueProvider.getValue(client);
+            }
+        }).flatMapCompletable(value -> Completable.fromAction(
+                () -> gattCharacteristic.setValue(value.getBytes())
+        ));
+    }
+
+    protected Maybe<ClientCharacteristicConfiguration> getClientCharacteristicNotification() {
+        return Observable.defer(() -> Observable.fromIterable(descriptors))
+                .filter(descriptor -> descriptor instanceof ClientCharacteristicConfiguration)
+                .cast(ClientCharacteristicConfiguration.class)
+                .firstElement();
     }
 
     @Override
