@@ -22,8 +22,8 @@ import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.RxBleDes
 import com.nexenio.rxandroidbleserver.service.value.BaseValue;
 
 import androidx.annotation.NonNull;
-import io.reactivex.Single;
-import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import timber.log.Timber;
 
 public class RxBleServerCallbackMediator {

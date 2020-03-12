@@ -7,7 +7,7 @@ import com.nexenio.rxandroidbleserver.request.descriptor.RxBleDescriptorReadRequ
 import com.nexenio.rxandroidbleserver.request.descriptor.RxBleDescriptorWriteRequest;
 import com.nexenio.rxandroidbleserver.service.RxBleService;
 
-import io.reactivex.subjects.PublishSubject;
+import io.reactivex.rxjava3.subjects.PublishSubject;
 
 public class BaseServerCallback implements RxBleServerCallback {
 
