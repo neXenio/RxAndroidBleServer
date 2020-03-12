@@ -40,14 +40,14 @@ import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import io.reactivex.Completable;
-import io.reactivex.Maybe;
-import io.reactivex.Observable;
-import io.reactivex.Single;
-import io.reactivex.SingleEmitter;
-import io.reactivex.functions.Action;
-import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.PublishSubject;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Maybe;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.core.SingleEmitter;
+import io.reactivex.rxjava3.functions.Action;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+import io.reactivex.rxjava3.subjects.PublishSubject;
 import timber.log.Timber;
 
 public class BaseServer implements RxBleServer, RxBleServerMapper {
@@ -277,7 +277,7 @@ public class BaseServer implements RxBleServer, RxBleServerMapper {
         return Observable.defer(() -> Observable.fromIterable(getClients()))
                 .filter(client -> client.getBluetoothDevice().equals(bluetoothDevice))
                 .firstOrError()
-                .onErrorResumeNext(createClient(bluetoothDevice)
+                .onErrorResumeWith(createClient(bluetoothDevice)
                         .doOnSuccess(clients::add));
     }
 

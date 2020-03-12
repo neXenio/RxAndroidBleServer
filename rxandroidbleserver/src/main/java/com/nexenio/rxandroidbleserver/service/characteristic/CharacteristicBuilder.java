@@ -12,7 +12,7 @@ import java.util.UUID;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import io.reactivex.Observable;
+import io.reactivex.rxjava3.core.Observable;
 
 public class CharacteristicBuilder {
 

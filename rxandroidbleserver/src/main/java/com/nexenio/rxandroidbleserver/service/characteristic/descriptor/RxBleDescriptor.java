@@ -10,8 +10,8 @@ import com.nexenio.rxandroidbleserver.service.value.RxBleValueContainer;
 import java.util.UUID;
 
 import androidx.annotation.NonNull;
-import io.reactivex.Maybe;
-import io.reactivex.Single;
+import io.reactivex.rxjava3.core.Maybe;
+import io.reactivex.rxjava3.core.Single;
 
 public interface RxBleDescriptor extends RxBleValueContainer {
 
