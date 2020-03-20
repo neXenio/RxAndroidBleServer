@@ -14,7 +14,6 @@ import java.util.UUID;
 
 import androidx.annotation.NonNull;
 import io.reactivex.rxjava3.core.Completable;
-import io.reactivex.Completable;
 import timber.log.Timber;
 
 public class BaseService implements RxBleService {
