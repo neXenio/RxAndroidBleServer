@@ -7,6 +7,7 @@ import com.nexenio.rxandroidbleserver.request.RxBleWriteRequest;
 import com.nexenio.rxandroidbleserver.request.descriptor.RxBleDescriptorReadRequest;
 import com.nexenio.rxandroidbleserver.request.descriptor.RxBleDescriptorWriteRequest;
 import com.nexenio.rxandroidbleserver.response.RxBleServerResponse;
+import com.nexenio.rxandroidbleserver.service.characteristic.RxBleCharacteristic;
 import com.nexenio.rxandroidbleserver.service.value.BaseValue;
 import com.nexenio.rxandroidbleserver.service.value.BaseValueContainer;
 import com.nexenio.rxandroidbleserver.service.value.RxBleValue;
@@ -19,6 +20,7 @@ import io.reactivex.rxjava3.core.Single;
 
 public class BaseDescriptor extends BaseValueContainer implements RxBleDescriptor {
 
+    protected RxBleCharacteristic parentCharacteristic;
     protected final BluetoothGattDescriptor gattDescriptor;
 
     public BaseDescriptor(@NonNull UUID uuid, int permissions) {
@@ -55,6 +57,21 @@ public class BaseDescriptor extends BaseValueContainer implements RxBleDescripto
     @Override
     public Maybe<RxBleServerResponse> createWriteRequestResponse(@NonNull RxBleDescriptorWriteRequest request) {
         return createWriteRequestResponse((RxBleWriteRequest) request);
+    }
+
+    @Override
+    public RxBleCharacteristic getParentCharacteristic() {
+        return parentCharacteristic;
+    }
+
+    @Override
+    public void setParentCharacteristic(@NonNull RxBleCharacteristic parentCharacteristic) {
+        this.parentCharacteristic = parentCharacteristic;
+    }
+
+    @Override
+    public boolean hasPermission(int permission) {
+        return (gattDescriptor.getPermissions() & permission) == permission;
     }
 
     @Override

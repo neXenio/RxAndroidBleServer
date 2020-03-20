@@ -163,6 +163,11 @@ public class RxBleServerCallbackMediator {
             public void onNotificationSent(BluetoothDevice device, int status) {
                 Timber.v("onNotificationSent() called with: device = [%s], status = [%s]", device, status);
                 super.onNotificationSent(device, status);
+                callbackDisposable.add(getClient(device)
+                        .subscribe(
+                                client -> serverCallback.getClientNotifiedPublisher().onNext(client),
+                                RxBleServerCallbackMediator.this::handleCallbackError
+                        ));
             }
 
             @Override

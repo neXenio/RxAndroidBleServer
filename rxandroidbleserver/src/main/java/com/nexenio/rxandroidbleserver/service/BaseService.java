@@ -3,6 +3,7 @@ package com.nexenio.rxandroidbleserver.service;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 
+import com.nexenio.rxandroidbleserver.RxBleServer;
 import com.nexenio.rxandroidbleserver.exception.RxBleServerException;
 import com.nexenio.rxandroidbleserver.service.characteristic.RxBleCharacteristic;
 
@@ -13,9 +14,12 @@ import java.util.UUID;
 
 import androidx.annotation.NonNull;
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.Completable;
+import timber.log.Timber;
 
 public class BaseService implements RxBleService {
 
+    protected RxBleServer parentServer;
     protected final Set<RxBleCharacteristic> characteristics;
     protected final BluetoothGattService gattService;
 
@@ -45,7 +49,11 @@ public class BaseService implements RxBleService {
             } else {
                 return Completable.error(new RxBleServerException("Unable to add GATT characteristic"));
             }
-        }).doOnComplete(() -> characteristics.add(characteristic));
+        }).doOnComplete(() -> {
+            characteristic.setParentService(this);
+            characteristics.add(characteristic);
+            Timber.d("Added characteristic: %s", characteristic);
+        });
     }
 
     @Override
@@ -56,6 +64,16 @@ public class BaseService implements RxBleService {
     @Override
     public BluetoothGattService getGattService() {
         return gattService;
+    }
+
+    @Override
+    public RxBleServer getParentServer() {
+        return parentServer;
+    }
+
+    @Override
+    public void setParentServer(@NonNull RxBleServer parentServer) {
+        this.parentServer = parentServer;
     }
 
     @Override

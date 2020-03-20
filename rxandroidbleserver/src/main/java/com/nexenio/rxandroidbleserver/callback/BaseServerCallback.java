@@ -18,6 +18,7 @@ public class BaseServerCallback implements RxBleServerCallback {
     private PublishSubject<RxBleCharacteristicWriteRequest> characteristicWriteRequestPublisher;
     private PublishSubject<RxBleDescriptorReadRequest> descriptorReadRequestPublisher;
     private PublishSubject<RxBleDescriptorWriteRequest> descriptorWriteRequestPublisher;
+    private PublishSubject<RxBleClient> clientNotifiedPublisher;
 
     public BaseServerCallback() {
         clientConnectionStateChangePublisher = PublishSubject.create();
@@ -27,6 +28,7 @@ public class BaseServerCallback implements RxBleServerCallback {
         characteristicWriteRequestPublisher = PublishSubject.create();
         descriptorReadRequestPublisher = PublishSubject.create();
         descriptorWriteRequestPublisher = PublishSubject.create();
+        clientNotifiedPublisher = PublishSubject.create();
     }
 
     @Override
@@ -62,6 +64,11 @@ public class BaseServerCallback implements RxBleServerCallback {
     @Override
     public PublishSubject<RxBleDescriptorWriteRequest> getDescriptorWriteRequestPublisher() {
         return descriptorWriteRequestPublisher;
+    }
+
+    @Override
+    public PublishSubject<RxBleClient> getClientNotifiedPublisher() {
+        return clientNotifiedPublisher;
     }
 
 }

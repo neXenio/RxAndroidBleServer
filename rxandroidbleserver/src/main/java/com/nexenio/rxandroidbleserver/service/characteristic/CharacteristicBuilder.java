@@ -2,6 +2,7 @@ package com.nexenio.rxandroidbleserver.service.characteristic;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 
+import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.ClientCharacteristicConfiguration;
 import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.RxBleDescriptor;
 import com.nexenio.rxandroidbleserver.service.value.BaseValue;
 import com.nexenio.rxandroidbleserver.service.value.RxBleValue;
@@ -35,6 +36,21 @@ public class CharacteristicBuilder {
 
         if (value != null) {
             characteristic.setValue(value).blockingAwait();
+        }
+
+        boolean enableNotifications = characteristic.hasProperty(BluetoothGattCharacteristic.PROPERTY_NOTIFY);
+        boolean enableIndications = characteristic.hasProperty(BluetoothGattCharacteristic.PROPERTY_INDICATE);
+        if (enableNotifications || enableIndications) {
+            boolean hasClientCharacteristicConfiguration = false;
+            for (RxBleDescriptor descriptor : descriptors) {
+                if (descriptor.getUuid() == ClientCharacteristicConfiguration.UUID) {
+                    hasClientCharacteristicConfiguration = true;
+                    break;
+                }
+            }
+            if (!hasClientCharacteristicConfiguration) {
+                descriptors.add(new ClientCharacteristicConfiguration());
+            }
         }
 
         Observable.fromIterable(descriptors)
