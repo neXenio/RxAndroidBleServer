@@ -11,7 +11,7 @@ import com.nexenio.rxandroidbleserver.service.characteristic.RxBleCharacteristic
 import com.nexenio.rxandroidbleserver.service.characteristic.descriptor.RxBleDescriptor;
 
 import androidx.annotation.NonNull;
-import io.reactivex.Single;
+import io.reactivex.rxjava3.core.Single;
 
 public interface RxBleServerMapper {
 

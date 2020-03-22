@@ -10,19 +10,21 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.widget.Toast;
 import android.widget.ToggleButton;
-
-import com.tbruyelle.rxpermissions2.RxPermissions;
-
-import java.util.concurrent.TimeUnit;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
-import io.reactivex.Completable;
-import io.reactivex.Flowable;
+
+import java.util.concurrent.TimeUnit;
+
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Flowable;
+
 import timber.log.Timber;
+
+import com.tbruyelle.rxpermissions3.RxPermissions;
+
 
 public class ExampleActivity extends AppCompatActivity {
 

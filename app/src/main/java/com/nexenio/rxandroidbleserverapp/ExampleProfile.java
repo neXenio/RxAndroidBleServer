@@ -20,8 +20,8 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
-import io.reactivex.Completable;
-import io.reactivex.Observable;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Observable;
 
 public final class ExampleProfile {
 

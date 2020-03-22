@@ -2,7 +2,7 @@ package com.nexenio.rxandroidbleserverapp;
 
 import org.junit.Test;
 
-import io.reactivex.subjects.PublishSubject;
+import io.reactivex.rxjava3.subjects.PublishSubject;
 
 import static org.junit.Assert.assertEquals;
 
