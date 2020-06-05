@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.Map;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
@@ -24,9 +23,6 @@ public class BaseClientValueProvider implements RxBleClientValueProvider {
     private final Map<RxBleClient, RxBleValue> valueMap;
     private final Map<RxBleClient, PublishSubject<RxBleValue>> valuePublisherMap;
 
-    @Nullable
-    private RxBleValue valueForAllClients;
-
     public BaseClientValueProvider() {
         this.valueMap = new HashMap<>();
         this.valuePublisherMap = new HashMap<>();
@@ -39,10 +35,6 @@ public class BaseClientValueProvider implements RxBleClientValueProvider {
             synchronized (valueMap) {
                 if (valueMap.containsKey(client)) {
                     return Single.just(valueMap.get(client));
-                } else if (valueForAllClients != null) {
-                    // TODO: 05.06.20 check if we should do this instead of emitting an error
-                    valueMap.put(client, valueForAllClients);
-                    return Single.just(valueForAllClients);
                 } else {
                     return Single.error(new ValueNotAvailableException(client));
                 }
@@ -72,8 +64,7 @@ public class BaseClientValueProvider implements RxBleClientValueProvider {
 
     @Override
     public Completable setValueForAllClients(@NonNull RxBleValue value) {
-        return Completable.fromAction(() -> this.valueForAllClients = value)
-                .andThen(getCurrentClients().flatMapCompletable(client -> setValue(client, value)));
+        return getCurrentClients().flatMapCompletable(client -> setValue(client, value));
     }
 
     @Override
