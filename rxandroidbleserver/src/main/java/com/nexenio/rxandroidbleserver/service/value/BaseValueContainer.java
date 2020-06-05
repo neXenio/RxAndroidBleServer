@@ -114,4 +114,20 @@ public class BaseValueContainer implements RxBleValueContainer {
                 '}';
     }
 
+    public boolean isSharingValues() {
+        return shareValues;
+    }
+
+    public void setShareValues(boolean shareValues) {
+        this.shareValues = shareValues;
+    }
+
+    public RxBleSharedValueProvider getSharedValueProvider() {
+        return sharedValueProvider;
+    }
+
+    public RxBleClientValueProvider getClientValueProvider() {
+        return clientValueProvider;
+    }
+
 }
