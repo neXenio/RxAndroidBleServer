@@ -12,8 +12,14 @@ public interface RxBleClientValueProvider {
 
     Single<RxBleValue> getValue(@NonNull RxBleClient client);
 
+    Observable<RxBleValue> getValuesFromAllClients();
+
     Completable setValue(@NonNull RxBleClient client, @NonNull RxBleValue value);
 
+    Completable setValueForAllClients(@NonNull RxBleValue value);
+
     Observable<RxBleValue> getValueChanges(@NonNull RxBleClient client);
+
+    Observable<RxBleValue> getValueChangesFromAllClients();
 
 }

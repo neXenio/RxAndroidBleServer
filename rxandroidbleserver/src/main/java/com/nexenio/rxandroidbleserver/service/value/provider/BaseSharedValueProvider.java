@@ -45,4 +45,11 @@ public class BaseSharedValueProvider implements RxBleSharedValueProvider {
         return valuePublisher;
     }
 
+    @Override
+    public String toString() {
+        return "BaseSharedValueProvider{" +
+                "value=" + value +
+                '}';
+    }
+
 }
