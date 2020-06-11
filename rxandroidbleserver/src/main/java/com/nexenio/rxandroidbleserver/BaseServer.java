@@ -136,8 +136,8 @@ public class BaseServer implements RxBleServer, RxBleServerMapper {
     @Override
     public Completable provideServicesAndAdvertise(@NonNull UUID uuid) {
         return Completable.mergeArray(
-                provideServices().subscribeOn(Schedulers.io()),
-                advertise(uuid).subscribeOn(Schedulers.io())
+                provideServices(),
+                advertise(uuid)
         );
     }
 
