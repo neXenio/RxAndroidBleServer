@@ -16,6 +16,7 @@ import com.nexenio.rxandroidbleserver.service.value.BaseValue;
 import com.nexenio.rxandroidbleserver.service.value.RxBleValue;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -40,7 +41,7 @@ public final class ExampleProfile {
 
     public Completable updateCharacteristicValues() {
         return Observable.interval(1, TimeUnit.SECONDS)
-                .map(count -> (int) (count % 1337))
+                .map(count -> "Updated example value #" + count)
                 .map(this::createExampleValue)
                 .flatMapCompletable(value -> exampleCharacteristic.setValue(value)
                         .andThen(exampleCharacteristic.sendNotifications()));
@@ -79,7 +80,7 @@ public final class ExampleProfile {
 
     private RxBleCharacteristic createExampleCharacteristic() {
         exampleCharacteristic = new CharacteristicBuilder(EXAMPLE_CHARACTERISTIC_UUID)
-                .withInitialValue(createExampleValue(0))
+                .withInitialValue(createExampleValue("Initial example value"))
                 .withDescriptor(new CharacteristicUserDescription("Example"))
                 .withDescriptor(new ClientCharacteristicConfiguration())
                 .withDescriptor(createExampleDescriptor())
@@ -106,6 +107,10 @@ public final class ExampleProfile {
         ByteBuffer buffer = ByteBuffer.allocate(4);
         buffer.putInt(number);
         return new BaseValue(buffer.array());
+    }
+
+    private RxBleValue createExampleValue(String value) {
+        return new BaseValue(value.getBytes(StandardCharsets.UTF_8));
     }
 
 }

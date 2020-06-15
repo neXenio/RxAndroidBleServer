@@ -16,4 +16,8 @@ public interface RxBleValueContainer extends RxBleClientValueProvider, RxBleShar
 
     Maybe<RxBleServerResponse> createWriteRequestResponse(@NonNull RxBleWriteRequest request);
 
+    boolean isSharingValuesBetweenClients();
+
+    void shareValuesBetweenClients(boolean shareValues);
+
 }

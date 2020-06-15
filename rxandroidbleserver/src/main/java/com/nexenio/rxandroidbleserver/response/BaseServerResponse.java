@@ -79,6 +79,8 @@ public class BaseServerResponse implements RxBleServerResponse {
     public static byte[] trimData(byte[] data, int offset) {
         if (offset == 0) {
             return data;
+        } else if (offset >= data.length) {
+            return new byte[]{};
         } else {
             return Arrays.copyOfRange(data, offset, data.length);
         }

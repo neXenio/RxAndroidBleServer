@@ -27,6 +27,7 @@ import com.nexenio.rxandroidbleserver.request.characteristic.RxBleCharacteristic
 import com.nexenio.rxandroidbleserver.request.characteristic.RxBleCharacteristicWriteRequest;
 import com.nexenio.rxandroidbleserver.request.descriptor.RxBleDescriptorReadRequest;
 import com.nexenio.rxandroidbleserver.request.descriptor.RxBleDescriptorWriteRequest;
+import com.nexenio.rxandroidbleserver.response.BaseServerResponse;
 import com.nexenio.rxandroidbleserver.response.RxBleServerResponse;
 import com.nexenio.rxandroidbleserver.service.RxBleService;
 import com.nexenio.rxandroidbleserver.service.characteristic.RxBleCharacteristic;
@@ -135,8 +136,8 @@ public class BaseServer implements RxBleServer, RxBleServerMapper {
     @Override
     public Completable provideServicesAndAdvertise(@NonNull UUID uuid) {
         return Completable.mergeArray(
-                provideServices().subscribeOn(Schedulers.io()),
-                advertise(uuid).subscribeOn(Schedulers.io())
+                provideServices(),
+                advertise(uuid)
         );
     }
 
@@ -436,7 +437,7 @@ public class BaseServer implements RxBleServer, RxBleServerMapper {
                     response.getRequestId(),
                     response.getStatus(),
                     response.getOffset(),
-                    response.getValue().getBytes()
+                    BaseServerResponse.trimData(response.getValue().getBytes(), response.getOffset())
             );
 
             if (success) {

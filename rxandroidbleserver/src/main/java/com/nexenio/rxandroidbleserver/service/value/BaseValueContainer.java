@@ -37,12 +37,21 @@ public class BaseValueContainer implements RxBleValueContainer {
 
     @Override
     public Completable setValue(@NonNull RxBleValue value) {
-        return sharedValueProvider.setValue(value);
+        return Completable.mergeArray(
+                sharedValueProvider.setValue(value),
+                clientValueProvider.setValueForAllClients(value)
+        );
     }
 
     @Override
     public Observable<RxBleValue> getValueChanges() {
-        return sharedValueProvider.getValueChanges();
+        return Observable.defer(() -> {
+            if (shareValues) {
+                return sharedValueProvider.getValueChanges();
+            } else {
+                return clientValueProvider.getValueChangesFromAllClients();
+            }
+        });
     }
 
     @Override
@@ -52,6 +61,17 @@ public class BaseValueContainer implements RxBleValueContainer {
                 return sharedValueProvider.getValue();
             } else {
                 return clientValueProvider.getValue(client);
+            }
+        });
+    }
+
+    @Override
+    public Observable<RxBleValue> getValuesFromAllClients() {
+        return Observable.defer(() -> {
+            if (shareValues) {
+                return sharedValueProvider.getValue().toObservable();
+            } else {
+                return clientValueProvider.getValuesFromAllClients();
             }
         });
     }
@@ -68,8 +88,30 @@ public class BaseValueContainer implements RxBleValueContainer {
     }
 
     @Override
+    public Completable setValueForAllClients(@NonNull RxBleValue value) {
+        return Completable.defer(() -> {
+            if (shareValues) {
+                return sharedValueProvider.setValue(value);
+            } else {
+                return clientValueProvider.setValueForAllClients(value);
+            }
+        });
+    }
+
+    @Override
     public Observable<RxBleValue> getValueChanges(@NonNull RxBleClient client) {
         return clientValueProvider.getValueChanges(client);
+    }
+
+    @Override
+    public Observable<RxBleValue> getValueChangesFromAllClients() {
+        return Observable.defer(() -> {
+            if (shareValues) {
+                return sharedValueProvider.getValueChanges();
+            } else {
+                return clientValueProvider.getValueChangesFromAllClients();
+            }
+        });
     }
 
     public Single<RxBleServerResponse> createReadRequestResponse(@NonNull RxBleReadRequest request) {
@@ -112,6 +154,24 @@ public class BaseValueContainer implements RxBleValueContainer {
                 ", sharedValueProvider=" + sharedValueProvider +
                 ", clientValueProvider=" + clientValueProvider +
                 '}';
+    }
+
+    @Override
+    public boolean isSharingValuesBetweenClients() {
+        return shareValues;
+    }
+
+    @Override
+    public void shareValuesBetweenClients(boolean shareValues) {
+        this.shareValues = shareValues;
+    }
+
+    public RxBleSharedValueProvider getSharedValueProvider() {
+        return sharedValueProvider;
+    }
+
+    public RxBleClientValueProvider getClientValueProvider() {
+        return clientValueProvider;
     }
 
 }
