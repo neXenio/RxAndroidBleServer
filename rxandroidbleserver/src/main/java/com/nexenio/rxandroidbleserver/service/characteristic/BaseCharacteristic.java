@@ -66,6 +66,10 @@ public class BaseCharacteristic extends BaseValueContainer implements RxBleChara
     public Completable addDescriptor(@NonNull RxBleDescriptor descriptor) {
         return Completable.defer(() -> {
             BluetoothGattDescriptor gattDescriptor = descriptor.getGattDescriptor();
+            gattDescriptor.setValue(descriptor.getValue()
+                    .map(RxBleValue::getBytes)
+                    .onErrorReturnItem(new byte[]{})
+                    .blockingGet());
             boolean success = gattCharacteristic.addDescriptor(gattDescriptor);
             if (success) {
                 return Completable.complete();
