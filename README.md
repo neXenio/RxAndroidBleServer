@@ -38,7 +38,14 @@ It also introduces a few wrappers to make it more convenient to work with the BL
 
 The `RxBleServer` interface provides the functionality of Android's `BluetoothGattServer`. It's capable of providing and advertising services as well as connecting and disconnecting clients.
 
-To get an instance of the default implementation, use the `ServerBuilder`.
+To get an instance of the default implementation, use the `ServerBuilder`:
+
+```java
+RxBleServer server = new ServerBuilder(context)
+        .withService(firstService)
+        .withService(secondService)
+        .build();
+```
 
 You can customize the default implementation by extending `BaseServer`.
 
@@ -58,8 +65,8 @@ To get an instance of the default implementation, use the `ServiceBuilder`:
 
 ```java
 RxBleService service = new ServiceBuilder(EXAMPLE_SERVICE_UUID)
-        .withCharacteristic(createFirstCharacteristic())
-        .withCharacteristic(createSecondCharacteristic())
+        .withCharacteristic(firstCharacteristic)
+        .withCharacteristic(secondCharacteristic)
         .isPrimaryService()
         .build();
 ```
@@ -75,8 +82,8 @@ To get an instance of the default implementation, use the `CharacteristicBuilder
 ```java
 RxBleCharacteristic characteristic = new CharacteristicBuilder(EXAMPLE_CHARACTERISTIC_UUID)
         .withInitialValue(DEFAUL_CHARACTERISTIC_VALUE)
-        .withDescriptor(createFirstDescriptor())
-        .withDescriptor(createSecondDescriptor())
+        .withDescriptor(firstDescriptor)
+        .withDescriptor(secondDescriptor)
         .allowRead()
         .allowWrite()
         .supportWritesWithoutResponse()
@@ -146,6 +153,11 @@ server.connect(someClientOfInterest)
         );
 ```
 
+### Example
+
+You can find a simple dummy server with one service, one characteristic and one descriptor in [ExampleProfile.java][example-profile].
+
 [releases]: https://github.com/neXenio/RxAndroidBleServer/releases
 [jitpack]: https://jitpack.io/#neXenio/RxAndroidBleServer/
 [rxjava]: https://github.com/ReactiveX/RxJava
+[example-profile]: https://github.com/neXenio/RxAndroidBleServer/blob/master/app/src/main/java/com/nexenio/rxandroidbleserverapp/ExampleProfile.java
