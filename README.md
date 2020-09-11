@@ -99,7 +99,7 @@ RxBleDescriptor descriptor = new DescriptorBuilder(EXAMPLE_DESCRIPTOR_UUID)
         .build();
 ```
 
-Some common descriptos might already be avialble pre-configured, such as the `CharacteristicUserDescription`:
+Some common descriptors might already be avialble pre-configured, such as the `CharacteristicUserDescription`:
 
 ```java
 RxBleDescriptor descriptor = new CharacteristicUserDescription("Example characteristic")
