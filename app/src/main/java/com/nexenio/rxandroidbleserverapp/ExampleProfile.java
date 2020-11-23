@@ -3,7 +3,7 @@ package com.nexenio.rxandroidbleserverapp;
 import android.content.Context;
 
 import com.nexenio.rxandroidbleserver.RxBleServer;
-import com.nexenio.rxandroidbleserver.RxBleServerProvider;
+import com.nexenio.rxandroidbleserver.ServerBuilder;
 import com.nexenio.rxandroidbleserver.service.RxBleService;
 import com.nexenio.rxandroidbleserver.service.ServiceBuilder;
 import com.nexenio.rxandroidbleserver.service.characteristic.CharacteristicBuilder;
@@ -64,8 +64,10 @@ public final class ExampleProfile {
     }
 
     private RxBleServer createExampleServer(@NonNull Context context) {
-        exampleServer = RxBleServerProvider.createServer(context);
-        exampleServer.addService(createExampleService()).blockingAwait();
+        exampleServer = new ServerBuilder(context)
+                .withService(createExampleService())
+                .build();
+
         return exampleServer;
     }
 
