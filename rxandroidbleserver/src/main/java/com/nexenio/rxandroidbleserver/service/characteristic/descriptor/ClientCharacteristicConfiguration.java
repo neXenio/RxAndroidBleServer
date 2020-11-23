@@ -50,6 +50,7 @@ public class ClientCharacteristicConfiguration extends BaseDescriptor {
             } else if (DISABLE_NOTIFICATION_VALUE.equals(request.getValue())) {
                 return disableNotifications(request.getClient());
             } else {
+                Timber.w("Unable to handle request value: %s", request.getValue());
                 return Completable.complete();
             }
         });
